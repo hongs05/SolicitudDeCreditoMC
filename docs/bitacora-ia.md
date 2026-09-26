@@ -1,59 +1,105 @@
-# Bitácora de uso de IA
+# Bitácora de uso de Inteligencia Artificial
 
-Registro de cómo se usó la IA en este proyecto. Cada entrada se agrega en el mismo commit que el trabajo que describe.
+Este documento registra cómo se utilizaron herramientas de IA durante el desarrollo de la prueba técnica, qué produjeron y qué decisiones se tomaron sobre sus propuestas. Cada entrada se incorpora en el mismo commit que el trabajo que describe, de modo que el historial de git respalda el registro.
 
 ---
 
-### 2026-09-24 · Análisis del enunciado y conversión a Markdown
+## 1. Herramientas utilizadas
 
-- **Herramienta y modelo:** Claude Code (app de escritorio), modelo Claude Fable 5.1.
-- **Objetivo:** entender a fondo el enunciado antes de escribir código.
-- **Prompts clave:**
-  - "Analiza profundamente este documento y dime cómo podemos resolverlo, pero no hagas nada todavía; primero genera un plan y debatimos."
-  - "Transforma el documento primero a uno .md."
-- **Qué produjo la IA:**
-  - Un análisis del enunciado que separa lo que se evalúa de lo que solo se describe, y una lista de ambigüedades: plazo contra cuotas, `n = 24` quincenal, tasa 0 %, observaciones al rechazar, roles.
-  - La conversión del `.docx` a [prueba-tecnica.md](prueba-tecnica.md). Al no estar pandoc instalado, extrajo el XML del Word con Python conservando títulos y listas.
-- **Qué decidí yo y por qué:** trabajar primero el diseño y posponer el código, para poder defender cada decisión.
-- **Qué corregí o rechacé:** nada en esta etapa.
-- **Commits:** commit de documentación de diseño.
+| Herramienta | Modelo | Uso principal |
+|---|---|---|
+| Claude Code, aplicación de escritorio | Claude Fable 5.1 | Análisis del enunciado, conversión de formato y diseño inicial |
+| Claude Code, aplicación de escritorio | Claude Opus 5.5 | Diseño de autenticación, frontend, infraestructura, pruebas y entregables; redacción de la especificación |
+| Superpowers, skill de brainstorming | No aplica | Proceso guiado de diseño con aprobación explícita por etapa |
 
-### 2026-09-24 · Diseño de la solución
+---
 
-- **Herramienta y modelo:** Claude Code con la skill de brainstorming de Superpowers. Modelos Claude Fable 5.1 y, desde la sección de autenticación, Claude Opus 5.5.
-- **Objetivo:** cerrar la arquitectura y el diseño completo antes de implementar.
-- **Prompts clave:**
-  - Pregunta sobre qué sería lo más limpio según Clean Architecture y Clean Code en TypeScript.
-  - Propuesta de usar tablas de catálogo en vez de enums, con una tabla `Banco` relacionada por llave foránea desde el desembolso.
-  - Pedido de un manejo de errores unificado, en inglés y en español.
-  - Un prompt estructurado propio que fija las decisiones cerradas y exige cerrar el diseño sección por sección, con aprobación explícita en cada una:
+## 2. Metodología
 
-    ```text
-    Vamos a cerrar el diseño sección por sección: API y contratos, máquina de
-    estados, motor financiero, autenticación, frontend, infraestructura, pruebas
-    y entregables. Presenta una sola sección y espera "aprobado". Da tu
-    recomendación con su justificación, no un menú de opciones. Al final
-    escribe la spec, revísala contra placeholders, contradicciones,
-    ambigüedades y reglas del enunciado no reflejadas, y pídeme que la revise.
-    No escribas código hasta que apruebe la spec.
-    ```
+El trabajo con IA siguió cuatro principios:
 
-- **Qué produjo la IA:**
-  - Propuesta de tres enfoques. Se eligió un monorepo con paquete de dominio compartido y Prisma.
-  - Arquitectura hexagonal con regla de dependencia verificada por lint.
-  - Ocho secciones de diseño: API, máquina de estados, motor financiero, autenticación, frontend, infraestructura, pruebas y entregables.
-  - Casos de prueba financieros con números exactos, calculados con un script en vez de a mano.
-  - La spec consolidada en [superpowers/specs/2026-09-24-solicitud-credito-design.md](superpowers/specs/2026-09-24-solicitud-credito-design.md).
-- **Qué decidí yo y por qué:**
-  - Stack NestJS + React, para compartir la fórmula de la cuota entre API y frontend en TypeScript.
-  - Plan de amortización completo, con capital, interés y saldo por cuota.
-  - Usuarios sembrados **con roles**. La IA recomendaba un solo rol. Elegí roles porque reflejan la separación real entre oficial, analista y cajero.
-  - Incluir los dos extras en el diseño desde el inicio.
-  - Tablas de catálogo para bancos y tipos de empleo. La IA proponía enums para todo. Acordamos un criterio: catálogos para datos, enums para valores que llevan lógica, como periodicidad, estado y rol.
-  - Manejo de errores unificado y bilingüe, con códigos estables y mensajes traducidos.
-  - Swagger, CI con smoke test de Docker, córdobas como moneda, y los siete campos exactos del enunciado en la pantalla del comité.
-- **Qué corregí o rechacé:**
-  - La recomendación inicial de un solo rol.
-  - Los enums para bancos y tipos de empleo.
-  - El formato de error original, solo en español, que reemplacé por el catálogo bilingüe.
-- **Commits:** commit de documentación de diseño.
+1. **Diseño antes que código.** No se generó código de producto hasta cerrar y aprobar una especificación completa.
+2. **Aprobación explícita por sección.** Cada sección del diseño se presentó por separado y solo avanzó con aprobación del autor.
+3. **Recomendación justificada, no menús.** Se pidió a la herramienta una recomendación con su justificación en cada decisión, para poder evaluarla y, cuando correspondía, rechazarla.
+4. **Verificación de resultados numéricos.** Los valores financieros de referencia se calcularon con un script, no se aceptaron cifras redactadas a mano.
+
+---
+
+## 3. Registro de sesiones
+
+### 3.1 Análisis del enunciado
+
+- **Fecha:** 2026-09-24
+- **Modelo:** Claude Fable 5.1
+- **Objetivo:** comprender el alcance real de la prueba e identificar ambigüedades antes de diseñar.
+
+**Instrucciones dadas a la herramienta**
+
+- Analizar el enunciado en profundidad y proponer una estrategia de resolución, sin ejecutar cambios.
+- Convertir el enunciado del formato Word a Markdown para versionarlo junto al código.
+
+**Resultados**
+
+- Separación entre los requisitos funcionales y los criterios que realmente se evalúan: reglas de estado, atomicidad, calidad de código y Docker.
+- Identificación de ambigüedades del enunciado: relación entre plazo y cantidad de cuotas, factor `n = 24` para la periodicidad quincenal, tasa de interés del 0 %, obligatoriedad de observaciones al rechazar y ausencia de un modelo de usuarios y roles.
+- Conversión del enunciado a [prueba-tecnica.md](prueba-tecnica.md). Ante la ausencia de pandoc, la herramienta extrajo el contenido directamente del XML del documento, conservando títulos y listas.
+
+**Validación del autor:** revisión del Markdown contra el documento original.
+
+### 3.2 Diseño de la solución
+
+- **Fecha:** 2026-09-24
+- **Modelos:** Claude Fable 5.1 y Claude Opus 5.5
+- **Objetivo:** definir la arquitectura y cerrar el diseño completo antes de implementar.
+
+**Instrucciones dadas a la herramienta**
+
+- Proponer la arquitectura más adecuada según los principios de Clean Architecture y Clean Code aplicados a TypeScript.
+- Evaluar el uso de tablas de catálogo en lugar de enumeraciones, incluida una tabla de bancos relacionada con el desembolso.
+- Diseñar un manejo de errores unificado con mensajes en español e inglés.
+- Cerrar el diseño mediante un prompt estructurado, redactado por el autor, que fija las decisiones ya tomadas y exige avanzar sección por sección:
+
+```text
+Vamos a cerrar el diseño sección por sección: API y contratos, máquina de
+estados, motor financiero, autenticación, frontend, infraestructura, pruebas
+y entregables. Presenta una sola sección y espera aprobación. Da tu
+recomendación con su justificación, no un menú de opciones. Al final
+escribe la especificación, revísala contra placeholders, contradicciones,
+ambigüedades y reglas del enunciado no reflejadas, y solicita revisión.
+No escribas código hasta que la especificación esté aprobada.
+```
+
+**Resultados**
+
+- Comparación de tres enfoques de organización del código. Se adoptó un monorepo con un paquete de dominio compartido y Prisma como ORM.
+- Arquitectura hexagonal con regla de dependencia verificada mediante lint.
+- Ocho secciones de diseño aprobadas: API y contratos, máquina de estados, motor financiero, autenticación, frontend, infraestructura, pruebas y entregables.
+- Casos de prueba financieros con valores exactos, generados mediante un script de cálculo.
+- Especificación consolidada en [2026-09-24-solicitud-credito-design.md](superpowers/specs/2026-09-24-solicitud-credito-design.md). En su revisión final la herramienta detectó y corrigió cinco inconsistencias entre secciones, documentadas en la sección 12 de la especificación.
+
+**Validación del autor:** aprobación explícita de cada sección y revisión de la especificación final.
+
+---
+
+## 4. Decisiones del autor frente a las propuestas de la IA
+
+| Tema | Propuesta de la IA | Decisión final | Justificación |
+|---|---|---|---|
+| Stack | NestJS + React | Aceptada | TypeScript en ambos extremos permite una única implementación de la fórmula de la cuota |
+| Plan de pagos | Amortización completa | Aceptada | Refleja el comportamiento esperado en una entidad financiera |
+| Usuarios | Usuarios sembrados con un solo rol | **Modificada:** cuatro roles | Representa la separación real de funciones entre oficial, analista y cajero |
+| Extras | Incluirlos en el diseño desde el inicio | Aceptada | Evita rediseñar el modelo de datos y la autenticación al final |
+| Catálogos | Enumeraciones para todos los valores fijos | **Modificada:** tablas para bancos y tipos de empleo | Criterio acordado: tablas para datos sin lógica, enumeraciones para valores con lógica de negocio |
+| Errores | Formato único con mensajes en español | **Modificada:** catálogo bilingüe con códigos estables | Separa la identificación del error de su presentación y habilita la internacionalización |
+| Documentación de la API | Swagger | Aceptada | Permite al evaluador probar la API sin el frontend |
+| Integración continua | GitHub Actions con prueba de humo sobre Docker | Aceptada | Demuestra que el entorno se levanta sin fallos |
+| Pantalla del comité | Mostrar solo los siete campos que exige el enunciado | Aceptada | Es la instrucción explícita del enunciado |
+| Moneda | Córdobas | Aceptada | Los cuatro bancos del enunciado operan en Nicaragua |
+
+---
+
+## 5. Control de calidad sobre el contenido generado
+
+- Ninguna propuesta se incorporó sin revisión y aprobación explícita.
+- Las decisiones que modifican o interpretan el enunciado quedan documentadas en la especificación y se reflejarán en el README.
+- El código que se genere en etapas posteriores se validará con pruebas automatizadas, lint de límites de arquitectura e integración continua antes de su incorporación.
