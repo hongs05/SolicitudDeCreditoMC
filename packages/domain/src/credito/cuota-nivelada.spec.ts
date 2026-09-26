@@ -48,6 +48,22 @@ describe('calcularCuotaNivelada', () => {
   it('una sola cuota sin interés devuelve el monto', () => {
     expect(calcularCuotaNivelada({ monto: 500, tasaAnual: 0, cuotas: 1, periodicidad: Periodicidad.ANUAL })).toBe(500);
   });
+
+  it('rechaza una combinación que no amortiza (cuota no supera el interés del primer periodo)', () => {
+    const accion = () =>
+      calcularCuotaNivelada({ monto: 10000, tasaAnual: 100, cuotas: 360, periodicidad: Periodicidad.MENSUAL });
+    expect(accion).toThrow(ParametrosCreditoInvalidosError);
+    try {
+      accion();
+    } catch (error) {
+      expect((error as ParametrosCreditoInvalidosError).params).toEqual({ campo: 'tasaAnual' });
+    }
+  });
+
+  it('acepta una combinación de tasa y plazo alto que sí amortiza', () => {
+    const cuota = calcularCuotaNivelada({ monto: 20000, tasaAnual: 30, cuotas: 30, periodicidad: Periodicidad.ANUAL });
+    expect(cuota).toBeGreaterThan(6000);
+  });
 });
 
 describe('validarCondiciones', () => {
@@ -62,6 +78,9 @@ describe('validarCondiciones', () => {
     [{ tasaAnual: -1 }, 'tasaAnual'],
     [{ tasaAnual: 100.01 }, 'tasaAnual'],
     [{ periodicidad: 'SEMANAL' as Periodicidad }, 'periodicidad'],
+    [{ cuotas: 31, periodicidad: Periodicidad.ANUAL }, 'cuotas'],
+    [{ cuotas: 361, periodicidad: Periodicidad.MENSUAL }, 'cuotas'],
+    [{ monto: 0.004 }, 'monto'],
   ])('%o falla en %s', (cambio, campo) => {
     const accion = () => validarCondiciones({ ...base, ...cambio });
     expect(accion).toThrow(ParametrosCreditoInvalidosError);
@@ -75,5 +94,11 @@ describe('validarCondiciones', () => {
   it('acepta tasa 0 y tasa 100', () => {
     expect(() => validarCondiciones({ ...base, tasaAnual: 0 })).not.toThrow();
     expect(() => validarCondiciones({ ...base, tasaAnual: 100 })).not.toThrow();
+  });
+
+  it('acepta el plazo máximo de 30 años en cada periodicidad', () => {
+    expect(() => validarCondiciones({ ...base, cuotas: 30, periodicidad: Periodicidad.ANUAL })).not.toThrow();
+    expect(() => validarCondiciones({ ...base, cuotas: 360, periodicidad: Periodicidad.MENSUAL })).not.toThrow();
+    expect(() => validarCondiciones({ ...base, cuotas: 720, periodicidad: Periodicidad.QUINCENAL })).not.toThrow();
   });
 });

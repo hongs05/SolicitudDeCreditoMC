@@ -1,7 +1,9 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { ParametrosCreditoInvalidosError } from '../errors/errores';
+import { calcularCuotaNivelada } from './cuota-nivelada';
 import { aCentavos } from './dinero';
-import { Periodicidad } from './periodicidad';
+import { Periodicidad, PERIODOS_POR_ANIO } from './periodicidad';
 import { type CuotaPlan, generarPlanAmortizacion } from './plan-amortizacion';
 
 const fila = (plan: CuotaPlan[], numero: number) => {
@@ -86,37 +88,67 @@ describe('generarPlanAmortizacion: casos límite', () => {
 });
 
 describe('generarPlanAmortizacion: invariantes', () => {
-  const periodicidadYMaximo = fc.constantFrom(
-    [Periodicidad.MENSUAL, 120] as const,
-    [Periodicidad.QUINCENAL, 180] as const,
-    [Periodicidad.ANUAL, 20] as const,
-  );
+  const periodicidad = fc.constantFrom(Periodicidad.MENSUAL, Periodicidad.QUINCENAL, Periodicidad.ANUAL);
 
   it('se cumplen para condiciones realistas', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 100_000, max: 1_000_000_000 }),
-        fc.integer({ min: 0, max: 3_600 }),
-        periodicidadYMaximo.chain(([periodicidad, maximo]) =>
-          fc.tuple(fc.constant(periodicidad), fc.integer({ min: 1, max: maximo })),
+        fc.integer({ min: 1, max: 1_000_000_000 }),
+        fc.integer({ min: 0, max: 10_000 }),
+        periodicidad.chain((p) =>
+          fc.tuple(fc.constant(p), fc.integer({ min: 1, max: 30 * PERIODOS_POR_ANIO[p] })),
         ),
         (montoCentavos, tasaCentesimas, [periodicidad, cuotas]) => {
-          const plan = generarPlanAmortizacion({
+          const condiciones = {
             monto: montoCentavos / 100,
             tasaAnual: tasaCentesimas / 100,
             cuotas,
             periodicidad,
-            fechaBase: '2026-01-31',
-          });
+          };
+          let plan: CuotaPlan[];
+          let cuotaNivelada: number;
+          try {
+            plan = generarPlanAmortizacion({ ...condiciones, fechaBase: '2026-01-31' });
+            cuotaNivelada = calcularCuotaNivelada(condiciones);
+          } catch (error) {
+            if (error instanceof ParametrosCreditoInvalidosError) {
+              fc.pre(false);
+              return;
+            }
+            throw error;
+          }
+
           expect(plan).toHaveLength(cuotas);
           expect(sumaCentavos(plan, 'capital')).toBe(montoCentavos);
           expect(plan[cuotas - 1]!.saldoRestante).toBe(0);
           for (const cuota of plan) {
             expect(cuota.interes).toBeGreaterThanOrEqual(0);
+            expect(cuota.capital).toBeGreaterThanOrEqual(0);
             expect(cuota.saldoRestante).toBeGreaterThanOrEqual(0);
           }
-          const primeras = plan.slice(0, -1).map((c) => c.valorCuota);
-          expect(new Set(primeras).size).toBeLessThanOrEqual(1);
+
+          // La cuota nivelada se paga tal cual hasta que el saldo llega a cero (k0).
+          // A partir de ahí (crédito saldado por redondeo antes del plazo nominal) las
+          // cuotas restantes valen cero.
+          const k0 = plan.findIndex((c) => c.saldoRestante === 0);
+          expect(k0).toBeGreaterThanOrEqual(0);
+
+          for (const cuota of plan.slice(0, k0)) {
+            expect(cuota.valorCuota).toBe(cuotaNivelada);
+          }
+
+          const cuotaK0 = plan[k0]!;
+          expect(cuotaK0.valorCuota).toBeGreaterThan(0);
+          if (k0 < cuotas - 1) {
+            expect(cuotaK0.valorCuota).toBeLessThanOrEqual(cuotaNivelada);
+          }
+
+          for (const cuota of plan.slice(k0 + 1)) {
+            expect(cuota.capital).toBe(0);
+            expect(cuota.interes).toBe(0);
+            expect(cuota.valorCuota).toBe(0);
+            expect(cuota.saldoRestante).toBe(0);
+          }
         },
       ),
       { numRuns: 300 },

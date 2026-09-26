@@ -595,7 +595,7 @@ function generarPlanAmortizacion(params: {
 function fechaVencimiento(fechaBase: string, periodicidad: Periodicidad, numero: number): string
 ```
 
-Las tres funciones validan `monto > 0`, `cuotas` entero mayor o igual a 1, y `tasaAnual` entre 0 y 100. Si algo falla, lanzan `ParametrosCreditoInvalidosError` con `params { campo }`.
+Las tres funciones validan cuatro reglas: el `monto` debe representar al menos un centavo, `cuotas` debe ser un entero mayor o igual a 1 y no superar el plazo máximo de 30 años según la periodicidad, `tasaAnual` debe estar entre 0 y 100, y la cuota nivelada resultante debe superar el interés del primer periodo, de modo que se rechacen las combinaciones de tasa y plazo que no amortizan. Si algo falla, lanzan `ParametrosCreditoInvalidosError` con `params { campo }`.
 
 ### 5.3 Algoritmo del plan
 
@@ -616,6 +616,8 @@ para k = 1..cuotas:
 ```
 
 **Invariantes.** La suma de `capital` es exactamente `monto`. El último `saldoRestante` es 0. Ningún `interes` es negativo. `valorCuota` es igual en todas las cuotas salvo, como mucho, la última.
+
+En combinaciones extremas de tasa y plazo, la cuota nivelada puede saldar el crédito antes de la última cuota por el redondeo al centavo; en ese caso las cuotas posteriores al saldo cero valen cero (`capital`, `interes` y `valorCuota` en 0), y esto no se considera un defecto.
 
 ### 5.4 Fechas de vencimiento
 
