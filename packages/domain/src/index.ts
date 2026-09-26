@@ -13,3 +13,5 @@ export * from './credito/dinero';
 export * from './credito/cuota-nivelada';
 export * from './credito/vencimientos';
 export * from './credito/plan-amortizacion';
+export * from './solicitud/solicitud';
+export * from './credito/credito';
