@@ -17,6 +17,7 @@ export function esDomainError(valor: unknown): valor is DomainError {
     valor instanceof Error &&
     typeof (valor as Partial<DomainError>).code === 'string' &&
     typeof (valor as Partial<DomainError>).httpStatus === 'number' &&
-    typeof (valor as Partial<DomainError>).params === 'object'
+    typeof (valor as Partial<DomainError>).params === 'object' &&
+    (valor as Partial<DomainError>).params !== null
   );
 }

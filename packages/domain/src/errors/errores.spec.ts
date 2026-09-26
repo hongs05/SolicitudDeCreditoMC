@@ -31,4 +31,10 @@ describe('errores de dominio', () => {
     expect(esDomainError({ code: 'X' })).toBe(false);
     expect(esDomainError(null)).toBe(false);
   });
+
+  it('esDomainError rechaza params null', () => {
+    expect(
+      esDomainError(Object.assign(new Error('x'), { code: 'X', httpStatus: 500, params: null })),
+    ).toBe(false);
+  });
 });
