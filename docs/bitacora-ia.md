@@ -97,6 +97,25 @@ No escribas código hasta que la especificación esté aprobada.
 
 **Validación del autor:** aprobación explícita de cada sección y revisión de la especificación final.
 
+### 3.4 Implementación de la API
+
+- **Fecha:** 2026-09-26
+- **Modelo:** Claude Fable 5.1 como controlador; Claude Sonnet como implementador y revisor
+- **Objetivo:** implementar `apps/api` según el plan 2.
+
+**Instrucciones dadas a la herramienta**
+
+- Ejecutar el plan `docs/superpowers/plans/2026-09-25-02-api.md` y sus partes B y C con TDD, tarea por tarea.
+
+**Resultados**
+
+- API NestJS con arquitectura hexagonal y límites de capas verificados por lint.
+- Autenticación con JWT y refresh token opaco en cookie, con rotación y detección de reuso.
+- Aprobación atómica con prueba de fallo a mitad de la inserción y prueba de concurrencia.
+- Contrato de error unificado en español e inglés, y documentación OpenAPI.
+
+**Validación del autor:** revisión del código, ejecución de la suite completa y prueba manual con curl.
+
 ---
 
 ## 4. Decisiones del autor frente a las propuestas de la IA
