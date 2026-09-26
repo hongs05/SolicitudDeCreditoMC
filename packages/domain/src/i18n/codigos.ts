@@ -1,0 +1,33 @@
+export const CODIGOS_ERROR = [
+  'VALIDACION',
+  'NO_AUTENTICADO',
+  'TOKEN_REVOCADO',
+  'PROHIBIDO',
+  'NO_ENCONTRADO',
+  'TRANSICION_INVALIDA',
+  'CREDITO_YA_DESEMBOLSADO',
+  'EDAD_MAXIMA_EXCEDIDA',
+  'OBSERVACIONES_REQUERIDAS',
+  'CREDITO_NO_APROBADO',
+  'PARAMETROS_CREDITO_INVALIDOS',
+  'ERROR_INTERNO',
+] as const;
+
+export type CodigoError = (typeof CODIGOS_ERROR)[number];
+
+export const CODIGOS_VALIDACION = [
+  'REQUERIDO',
+  'CORREO_INVALIDO',
+  'VALOR_MINIMO',
+  'VALOR_MAXIMO',
+  'LONGITUD_INVALIDA',
+  'ENTERO_REQUERIDO',
+  'FECHA_INVALIDA',
+  'FORMATO_INVALIDO',
+  'VALOR_NO_PERMITIDO',
+  'VALOR_INVALIDO',
+] as const;
+
+export type CodigoValidacion = (typeof CODIGOS_VALIDACION)[number];
+
+export type CodigoMensaje = CodigoError | CodigoValidacion;
