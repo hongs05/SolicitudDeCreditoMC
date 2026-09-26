@@ -655,7 +655,7 @@ Suma de capital 10 000,00. Suma de intereses 661,86.
 | Nº | Capital | Interés | Cuota | Saldo |
 |---|---|---|---|---|
 | 1 | 2 380,95 | 500,00 | 2 880,95 | 2 619,05 |
-| 2 | 2 619,05 | 261,90 | 2 880,95 | 0,00 |
+| 2 | 2 619,05 | 261,91 | 2 880,96 | 0,00 |
 
 **D. 2 000 al 24 % anual, 24 cuotas quincenales.** i = 0,01. Cuota 94,15.
 
