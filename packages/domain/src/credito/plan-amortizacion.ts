@@ -15,16 +15,6 @@ export interface ParametrosPlan extends CondicionesCredito {
   fechaBase: string;
 }
 
-// Banker's rounding: round 0.5 to nearest even
-function redondearMitadAlPar(n: number): number {
-  const piso = Math.floor(n);
-  const frac = n - piso;
-  if (frac < 0.5) return piso;
-  if (frac > 0.5) return Math.ceil(n);
-  // frac === 0.5, round to even
-  return piso % 2 === 0 ? piso : piso + 1;
-}
-
 export function generarPlanAmortizacion(p: ParametrosPlan): CuotaPlan[] {
   const cuotaCentavos = cuotaNiveladaEnCentavos(p);
   const i = tasaPeriodica(p.tasaAnual, p.periodicidad);
@@ -32,7 +22,7 @@ export function generarPlanAmortizacion(p: ParametrosPlan): CuotaPlan[] {
   const plan: CuotaPlan[] = [];
 
   for (let numero = 1; numero <= p.cuotas; numero++) {
-    const interesCentavos = redondearMitadAlPar(saldoCentavos * i);
+    const interesCentavos = Math.round(saldoCentavos * i);
     const esUltima = numero === p.cuotas;
     const capitalCentavos = esUltima
       ? saldoCentavos

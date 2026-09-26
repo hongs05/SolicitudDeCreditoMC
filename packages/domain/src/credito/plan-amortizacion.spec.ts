@@ -44,7 +44,7 @@ describe('generarPlanAmortizacion: casos de referencia', () => {
       periodicidad: Periodicidad.ANUAL, fechaBase: '2026-01-10',
     });
     expect(fila(plan, 1)).toEqual([2380.95, 500, 2880.95, 2619.05]);
-    expect(fila(plan, 2)).toEqual([2619.05, 261.9, 2880.95, 0]);
+    expect(fila(plan, 2)).toEqual([2619.05, 261.91, 2880.96, 0]);
   });
 
   it('D: 2 000 al 24 %, 24 cuotas quincenales', () => {
