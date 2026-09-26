@@ -9,7 +9,10 @@
     "test": "vitest run",
     "test:int": "vitest run --config vitest.int.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node dist/seed.js"
   },
   "dependencies": {
     "@credito/domain": "*",
