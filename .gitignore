@@ -9,6 +9,8 @@ coverage/
 # Base de datos SQLite local
 data/*.db
 data/*.db-journal
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
 
 # Entorno
 .env
