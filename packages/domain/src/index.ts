@@ -9,3 +9,5 @@ export * from './solicitud/estado-solicitud';
 export * from './credito/periodicidad';
 export * from './credito/dinero';
 export * from './credito/cuota-nivelada';
+export * from './credito/vencimientos';
+export * from './credito/plan-amortizacion';
