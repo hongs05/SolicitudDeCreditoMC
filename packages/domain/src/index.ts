@@ -6,6 +6,8 @@ export * from './i18n/resolver-mensaje';
 export * from './errors/domain-error';
 export * from './errors/errores';
 export * from './solicitud/estado-solicitud';
+export * from './solicitud/edad';
+export * from './auth/rol';
 export * from './credito/periodicidad';
 export * from './credito/dinero';
 export * from './credito/cuota-nivelada';
