@@ -54,7 +54,23 @@ export const VALORES_INICIALES: ValoresSolicitud = {
   montoSolicitado: '',
   cantidadCuotas: '',
   tasaAnual: '',
-  periodicidad: '',
+  periodicidad: 'MENSUAL',
+};
+
+/** Datos de ejemplo para el botón "Llenar con ejemplo"; el tipo de empleo se toma del catálogo al usarlos. */
+export const VALORES_EJEMPLO: Omit<ValoresSolicitud, 'tipoEmpleoId'> = {
+  nombreCompleto: 'Mariela Esperanza Guevara Ortiz',
+  cedula: '001-140689-0045R',
+  correo: 'mguevara@correo.com.ni',
+  telefono: '87624410',
+  fechaNacimiento: '1989-06-14',
+  empresa: 'Farmacia Santa Ana',
+  antiguedadAnios: '5',
+  ingresoMensual: '27500',
+  montoSolicitado: '45000',
+  cantidadCuotas: '24',
+  tasaAnual: '18',
+  periodicidad: 'MENSUAL',
 };
 
 const dosDecimales = (v: string): string => {

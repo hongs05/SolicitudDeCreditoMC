@@ -147,6 +147,30 @@ No escribas código hasta que la especificación esté aprobada.
 - README con arranque, recorrido guiado, arquitectura, interpretaciones del enunciado y limitaciones.
 
 **Validación del autor:** ejecución de `docker compose up --build` en limpio y recorrido completo en el navegador.
+
+### 3.7 Alineación del frontend con el diseño visual
+
+- **Fecha:** 2026-09-27
+- **Herramienta:** Claude Code
+- **Objetivo:** comparar el frontend con el prototipo visual "Crédito MC" y llevarlo a ese diseño sin perder funcionalidad.
+
+**Instrucciones dadas a la herramienta**
+
+- Revisar si el frontend cumple la especificación y el diseño, listar las diferencias y aplicarlas conservando lo que ya funciona.
+
+**Resultados**
+
+- Tema del diseño con tokens de color, tipografía Plus Jakarta Sans y DM Mono, y modo oscuro automático.
+- Menú lateral agrupado con contadores de pendientes y aprobados, cajón en móvil y menú de usuario.
+- Login en dos columnas, listado con tarjetas de estado, formulario en bloques numerados con periodicidad segmentada y relación cuota / ingreso, comité ordenado por antigüedad y días de espera, desembolso y plan de pagos con totales y próxima cuota.
+- Pantalla nueva de expediente (`/solicitudes/:solicitudId`) con historial, observaciones y acciones según el rol, usando solo rutas existentes de la API.
+- Los errores de red o de servidor en acciones ofrecen Reintentar; el diálogo de confirmación cita las observaciones o el banco y la cuenta.
+
+**Qué se mantuvo:** idioma español e inglés, textos y accesibilidad que usan las pruebas, reglas de rol, validaciones, refresh de sesión y protección contra doble envío.
+
+**Qué quedó fuera:** la portada pública, Usuarios, Mi cuenta y el cambio de contraseña del prototipo, porque requieren rutas nuevas en la API; y la búsqueda por nombre del listado, porque la API filtra por cédula exacta.
+
+**Validación del autor:** pruebas del frontend, lint, verificación de tipos, build de producción y recorrido en el navegador con los cuatro roles, en escritorio, móvil y modo oscuro.
 ---
 
 ## 4. Decisiones del autor frente a las propuestas de la IA

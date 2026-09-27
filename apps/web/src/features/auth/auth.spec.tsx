@@ -1,5 +1,5 @@
 import { Rol } from '@credito/domain';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -72,6 +72,18 @@ describe('autenticación', () => {
     expect(screen.getByRole('link', { name: 'Plan de pagos' })).toBeInTheDocument();
   });
 
+  it('el menú marca la página actual y muestra cuántas solicitudes esperan al comité', async () => {
+    servidor.use(http.get('/api/v1/solicitudes', ({ request }) => {
+      const q = new URL(request.url).searchParams;
+      return HttpResponse.json({ items: [], total: q.get('estado') === 'PENDIENTE' ? 3 : 0, page: 1, pageSize: 1 });
+    }));
+    renderizar(rutas, { ruta: '/comite', usuario: tokens(Rol.ANALISTA).usuario });
+    const comite = await screen.findByRole('link', { name: /Comité de riesgo/ });
+    expect(comite).toHaveAttribute('aria-current', 'page');
+    expect(await within(comite).findByText('3')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Desembolsos/ })).not.toBeInTheDocument();
+  });
+
   it('cambiar el idioma traduce el menú', async () => {
     const { user } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
     await user.selectOptions(await screen.findByLabelText('Idioma'), 'en');
@@ -87,7 +99,8 @@ describe('autenticación', () => {
     const { user, queryClient } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
     const limpiarSpy = vi.spyOn(queryClient, 'clear');
     await screen.findByText('contenido privado');
-    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await user.click(screen.getByRole('button', { name: 'Menú de oficial' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }));
     expect(await screen.findByLabelText('Usuario')).toBeInTheDocument();
     expect(peticionesLogout).toBe(1);
     expect(limpiarSpy).toHaveBeenCalledOnce();

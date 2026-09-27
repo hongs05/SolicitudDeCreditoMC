@@ -785,6 +785,7 @@ Los componentes no calculan. Todo cálculo sale de `packages/domain` y todo acce
 | `/` | autenticado | Redirige: OFICIAL y ADMIN a `/solicitudes`, ANALISTA a `/comite`, CAJERO a `/desembolsos` | |
 | `/solicitudes` | todos | Listado con filtros de estado y cédula | `GET /solicitudes` |
 | `/solicitudes/nueva` | OFICIAL, ADMIN | Captura | `GET /tipos-empleo`, `POST /solicitudes` |
+| `/solicitudes/:solicitudId` | todos | Expediente: datos, historial y acciones según el rol | `GET /solicitudes/:id`, `GET /creditos/:id` |
 | `/comite` | ANALISTA, ADMIN | Bandeja de PENDIENTE | `GET /solicitudes?estado=PENDIENTE` |
 | `/comite/:solicitudId` | ANALISTA, ADMIN | Dictamen | `GET /solicitudes/:id`, aprobar o rechazar |
 | `/desembolsos` | CAJERO, ADMIN | Bandeja de APROBADA | `GET /creditos?estado=APROBADA` |
@@ -811,6 +812,8 @@ El esquema Zod llama a las funciones del dominio y usa el mismo catálogo de men
 No se muestran datos laborales. Debajo van el campo Observaciones y los botones **Aprobar Crédito** y **Rechazar Crédito**. Ambos exigen observaciones y abren un diálogo de confirmación. Al aprobar, vuelve a la bandeja con un aviso que muestra el número de crédito creado. Si la solicitud ya no está PENDIENTE, la pantalla muestra su estado y oculta las acciones.
 
 **Desembolso.** Solo lectura: cédula, nombre, monto, tasa, periodicidad y plazo. Debajo, el selector de banco y el número de cuenta. Procesar abre una confirmación con banco y cuenta. Tras el éxito, la misma pantalla muestra el estado DESEMBOLSADA y el plan de pagos. Si el crédito no está APROBADA al abrir la pantalla, se oculta el formulario y se muestra el estado. Si está DESEMBOLSADA, se muestran además los datos del desembolso y el plan.
+
+**Expediente.** Datos personales y laborales, historial con quién registró, dictaminó y desembolsó, las observaciones y la cuota. Ofrece Dictaminar, Desembolsar o ver el plan según el estado y el rol.
 
 **Consulta de plan.** Un campo de cédula. Si la cédula tiene un crédito, carga su plan directamente. Si tiene varios, muestra la lista para elegir. Si no tiene ninguno, lo indica. La tabla es el componente `TablaPlan`, compartido con la pantalla de desembolso.
 

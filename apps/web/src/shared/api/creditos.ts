@@ -8,6 +8,7 @@ export interface FiltrosCreditos {
   estado?: EstadoSolicitud;
   cedula?: string;
   page: number;
+  pageSize?: number;
 }
 
 export const useCreditos = (f: FiltrosCreditos, habilitado = true) =>
@@ -25,8 +26,21 @@ export const useCreditosPorCedula = (cedula: string) =>
     enabled: cedula !== '',
   });
 
-export const useCredito = (id: number) =>
-  useQuery({ queryKey: ['credito', id], queryFn: () => api.get<CreditoResponse>(`/creditos/${id}`) });
+export const useCredito = (id: number | null) =>
+  useQuery({
+    queryKey: ['credito', id],
+    queryFn: () => api.get<CreditoResponse>(`/creditos/${id}`),
+    enabled: id !== null,
+  });
+
+/** Total de créditos cuya solicitud está en un estado, para el contador del menú. */
+export const useConteoCreditos = (estado: EstadoSolicitud, habilitado = true) =>
+  useQuery({
+    queryKey: ['creditos', 'conteo', estado],
+    queryFn: () => api.get<Paginado<CreditoResumen>>(`/creditos?${aQuery({ estado, page: 1, pageSize: 1 })}`),
+    select: (r) => r.total,
+    enabled: habilitado,
+  });
 
 export const usePlanPagos = (id: number | null) =>
   useQuery({
