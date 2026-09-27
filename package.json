@@ -4,8 +4,8 @@
   "workspaces": ["packages/*", "apps/*"],
   "engines": { "node": ">=22" },
   "scripts": {
-    "build": "npm run build -w @credito/domain && npm run build -w @credito/api",
-    "dev": "npm run build -w @credito/domain && concurrently -n domain,api -c blue,green \"npm run dev -w @credito/domain\" \"npm run dev -w @credito/api\"",
+    "build": "npm run build -w @credito/domain && npm run build -w @credito/api && npm run build -w @credito/web",
+    "dev": "npm run build -w @credito/domain && concurrently -n domain,api,web -c blue,green,magenta \"npm run dev -w @credito/domain\" \"npm run dev -w @credito/api\" \"npm run dev -w @credito/web\"",
     "test": "npm run test --workspaces --if-present",
     "test:int": "npm run test:int -w @credito/api",
     "test:e2e": "npm run test:e2e -w @credito/api",
