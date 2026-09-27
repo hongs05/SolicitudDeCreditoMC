@@ -6,6 +6,7 @@ import { BcryptPasswordHasher } from '../../src/auth/infrastructure/bcrypt-passw
 import type { Configuracion } from '../../src/shared/infrastructure/config/configuracion';
 import { configurarApp } from '../../src/shared/infrastructure/http/configurar-app';
 import { sembrar } from '../../src/shared/infrastructure/prisma/semilla';
+import { configurarSwagger } from '../../src/swagger';
 import { type BaseDatosPrueba, crearBaseDatosPrueba } from './base-datos';
 
 export const configuracionPrueba = (url: string): Configuracion => ({
@@ -33,6 +34,7 @@ export async function crearAppPrueba(extras: Type[] = []): Promise<AppPrueba> {
   }).compile();
   const app = modulo.createNestApplication();
   configurarApp(app);
+  configurarSwagger(app);
   await app.init();
   return {
     app,
