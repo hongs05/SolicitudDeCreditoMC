@@ -1,4 +1,4 @@
-import { esEstadoSolicitud, esPeriodicidad, Solicitud } from '@credito/domain';
+import { esEstadoSolicitud, esPeriodicidad, Solicitud, type SolicitudPrevia } from '@credito/domain';
 import type { Solicitud as SolicitudFila } from '@prisma/client';
 import { aDecimal, aNumero, type ClientePrisma } from '../../shared/infrastructure/prisma/decimal';
 import type { SolicitudRepository } from '../application/ports/solicitud.repository';
@@ -37,6 +37,18 @@ export class PrismaSolicitudRepository implements SolicitudRepository {
   async obtenerPorId(id: number): Promise<Solicitud | null> {
     const fila = await this.db.solicitud.findUnique({ where: { id } });
     return fila ? aSolicitud(fila) : null;
+  }
+
+  async historialPorCedula(cedula: string): Promise<SolicitudPrevia[]> {
+    const filas = await this.db.solicitud.findMany({
+      where: { cedula },
+      select: { id: true, estado: true, fechaNacimiento: true },
+      orderBy: { id: 'asc' },
+    });
+    return filas.map((f) => {
+      if (!esEstadoSolicitud(f.estado)) throw new Error(`Solicitud ${f.id} con estado inválido`);
+      return { id: f.id, estado: f.estado, fechaNacimiento: f.fechaNacimiento };
+    });
   }
 
   async crear(solicitud: Solicitud): Promise<Solicitud> {

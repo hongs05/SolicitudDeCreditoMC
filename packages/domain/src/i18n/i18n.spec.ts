@@ -27,7 +27,7 @@ describe('catálogo de mensajes', () => {
 describe('resolverMensaje', () => {
   it('interpola y traduce valores conocidos', () => {
     expect(resolverMensaje('TRANSICION_INVALIDA', { accion: 'aprobar', estado: 'APROBADA' }, 'es'))
-      .toBe('No se puede aprobar una solicitud en estado aprobada');
+      .toBe('No es posible aprobar una solicitud en estado aprobada');
     expect(resolverMensaje('TRANSICION_INVALIDA', { accion: 'aprobar', estado: 'APROBADA' }, 'en'))
       .toBe('Cannot approve an application in approved state');
     expect(resolverMensaje('NO_ENCONTRADO', { recurso: 'Credito' }, 'es'))
@@ -35,7 +35,7 @@ describe('resolverMensaje', () => {
     expect(resolverMensaje('NO_ENCONTRADO', { recurso: 'Credito' }, 'en'))
       .toBe('Credit not found');
     expect(resolverMensaje('EDAD_MAXIMA_EXCEDIDA', { edad: 81 }, 'es'))
-      .toBe('El solicitante tiene 81 años; el máximo es 80');
+      .toBe('El solicitante tiene 81 años y la edad máxima permitida es 80');
   });
 
   it('usa ERROR_INTERNO para un código desconocido', () => {

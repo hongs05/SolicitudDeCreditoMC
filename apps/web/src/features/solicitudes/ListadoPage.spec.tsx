@@ -50,7 +50,7 @@ describe('ListadoPage', () => {
   it('el analista no ve el botón de crear', async () => {
     servidor.use(http.get('/api/v1/solicitudes', () => HttpResponse.json(paginado([]))));
     renderizar(<ListadoPage />, { usuario: usuarios.analista });
-    expect(await screen.findByText('No hay resultados')).toBeInTheDocument();
+    expect(await screen.findByText('No se encontraron resultados')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Nueva solicitud' })).not.toBeInTheDocument();
   });
 
@@ -66,7 +66,7 @@ describe('ListadoPage', () => {
     const { user } = renderizar(<ListadoPage />, { usuario: usuarios.oficial });
     expect(await screen.findByRole('alert')).toHaveTextContent('Falló el servidor');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
-    expect(screen.queryByText('No hay resultados')).not.toBeInTheDocument();
+    expect(screen.queryByText('No se encontraron resultados')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(await screen.findByText('Ana López')).toBeInTheDocument();

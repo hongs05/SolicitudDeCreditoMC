@@ -35,8 +35,8 @@ describe('DictamenPage', () => {
   it('exige observaciones antes de pedir confirmación', async () => {
     conSolicitud();
     const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
-    await user.click(await screen.findByRole('button', { name: 'Aprobar Crédito' }));
-    expect(screen.getByText('Las observaciones son obligatorias')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Aprobar crédito' }));
+    expect(screen.getByText('Las observaciones son obligatorias para emitir el dictamen')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -52,34 +52,37 @@ describe('DictamenPage', () => {
     }));
     const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
     await user.type(await screen.findByLabelText('Observaciones'), 'Cumple políticas');
-    await user.click(screen.getByRole('button', { name: 'Aprobar Crédito' }));
-    const confirmar = screen.getAllByRole('button', { name: 'Aprobar Crédito' })[1]!;
+    await user.click(screen.getByRole('button', { name: 'Aprobar crédito' }));
+    const confirmar = screen.getAllByRole('button', { name: 'Aprobar crédito' })[1]!;
     await user.dblClick(confirmar);
     expect(await screen.findByText('bandeja')).toBeInTheDocument();
     expect(peticiones).toBe(1);
     expect(cuerpo).toEqual({ observaciones: 'Cumple políticas' });
-    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 creado');
+    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 generado correctamente');
   });
 
   it('una solicitud ya dictaminada no ofrece acciones', async () => {
     conSolicitud({ estado: EstadoSolicitud.APROBADA, observaciones: 'ok' });
     renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
-    expect(await screen.findByText('Esta solicitud ya no está pendiente.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Aprobar Crédito' })).not.toBeInTheDocument();
+    expect(await screen.findByText('Esta solicitud ya cuenta con un dictamen.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aprobar crédito' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Observaciones')).not.toBeInTheDocument();
   });
 
-  it('muestra el error de negocio de la API', async () => {
+  it('si otro analista ya la dictaminó (409), lo explica en un modal y ofrece volver a la bandeja', async () => {
     conSolicitud();
     servidor.use(http.post('/api/v1/solicitudes/5/rechazar', () => HttpResponse.json(
-      { statusCode: 409, code: 'TRANSICION_INVALIDA', message: 'No se puede rechazar una solicitud en estado aprobada' },
+      { statusCode: 409, code: 'TRANSICION_INVALIDA', message: 'No es posible rechazar una solicitud en estado aprobada' },
       { status: 409 },
     )));
     const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
     await user.type(await screen.findByLabelText('Observaciones'), 'No cumple');
-    await user.click(screen.getByRole('button', { name: 'Rechazar Crédito' }));
-    await user.click(screen.getAllByRole('button', { name: 'Rechazar Crédito' })[1]!);
-    expect(await screen.findByRole('alert')).toHaveTextContent('No se puede rechazar una solicitud en estado aprobada');
+    await user.click(screen.getByRole('button', { name: 'Rechazar solicitud' }));
+    await user.click(screen.getAllByRole('button', { name: 'Rechazar solicitud' })[1]!);
+    const modal = await screen.findByRole('dialog', { name: 'La solicitud ya fue dictaminada' });
+    expect(modal).toHaveTextContent('No es posible rechazar una solicitud en estado aprobada');
+    await user.click(within(modal).getByRole('button', { name: 'Volver a la bandeja' }));
+    expect(await screen.findByText('bandeja')).toBeInTheDocument();
   });
 
   it('la confirmación cita las observaciones y el monto', async () => {
@@ -87,7 +90,7 @@ describe('DictamenPage', () => {
     const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
     await user.type(await screen.findByLabelText('Observaciones'), 'Capacidad verificada');
     expect(screen.getByText('20 / 1000')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Aprobar Crédito' }));
+    await user.click(screen.getByRole('button', { name: 'Aprobar crédito' }));
     const dialogo = screen.getByRole('dialog');
     expect(dialogo).toHaveTextContent('Capacidad verificada');
     expect(dialogo).toHaveTextContent(/C\$ 10[,.]000[.,]00/);
@@ -101,7 +104,7 @@ describe('DictamenPage', () => {
     });
     renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
     expect(await screen.findByText('Ingresos insuficientes')).toBeInTheDocument();
-    expect(screen.getByText(/Dictaminada por analista/)).toBeInTheDocument();
+    expect(screen.getByText(/Dictamen emitido por analista/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver expediente' })).toHaveAttribute('href', '/solicitudes/5');
   });
 
@@ -110,8 +113,8 @@ describe('DictamenPage', () => {
     servidor.use(http.post('/api/v1/solicitudes/5/aprobar', () => HttpResponse.error()));
     const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
     await user.type(await screen.findByLabelText('Observaciones'), 'Ok');
-    await user.click(screen.getByRole('button', { name: 'Aprobar Crédito' }));
-    await user.click(screen.getAllByRole('button', { name: 'Aprobar Crédito' })[1]!);
+    await user.click(screen.getByRole('button', { name: 'Aprobar crédito' }));
+    await user.click(screen.getAllByRole('button', { name: 'Aprobar crédito' })[1]!);
     const aviso = await screen.findByRole('alert');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(within(aviso).getByRole('button', { name: 'Reintentar' }));

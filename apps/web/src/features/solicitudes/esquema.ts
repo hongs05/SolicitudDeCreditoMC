@@ -1,5 +1,6 @@
 import {
-  calcularEdad, EDAD_MAXIMA, esFechaValida, esPeriodicidad, type Locale, resolverMensaje,
+  antiguedadMaxima, calcularEdad, EDAD_MAXIMA, EDAD_MINIMA, esFechaValida, esPeriodicidad, type Locale,
+  PATRON_NOMBRE, PATRON_TELEFONO, PERIODOS_POR_ANIO, PLAZO_MAXIMO_ANIOS, resolverMensaje,
 } from '@credito/domain';
 import { z } from 'zod';
 
@@ -17,16 +18,20 @@ export function crearEsquemaSolicitud(hoy: string, locale: Locale) {
       .refine((v) => Number(v) <= max, m('VALOR_MAXIMO', { max }));
   const decimal = () => requerido().regex(PATRON_DECIMAL, m('FORMATO_INVALIDO'));
 
-  return z.object({
-    nombreCompleto: texto(3, 120),
+  const base = z.object({
+    nombreCompleto: texto(3, 120).regex(PATRON_NOMBRE, m('FORMATO_INVALIDO')),
     cedula: texto(5, 30).regex(/^\S+$/, m('FORMATO_INVALIDO')),
     correo: requerido().email(m('CORREO_INVALIDO')),
-    telefono: texto(7, 20),
+    telefono: texto(7, 20).regex(PATRON_TELEFONO, m('FORMATO_INVALIDO')),
     fechaNacimiento: requerido()
       .refine((v) => esFechaValida(v) && v < hoy, m('FECHA_INVALIDA'))
       .refine(
         (v) => !esFechaValida(v) || v >= hoy || calcularEdad(v, hoy) <= EDAD_MAXIMA,
         (v) => ({ message: m('EDAD_MAXIMA_EXCEDIDA', { edad: esFechaValida(v) ? calcularEdad(v, hoy) : 0 }) }),
+      )
+      .refine(
+        (v) => !esFechaValida(v) || v >= hoy || calcularEdad(v, hoy) >= EDAD_MINIMA,
+        (v) => ({ message: m('EDAD_MINIMA_NO_ALCANZADA', { edad: esFechaValida(v) ? calcularEdad(v, hoy) : 0, min: EDAD_MINIMA }) }),
       ),
     tipoEmpleoId: requerido(),
     empresa: texto(2, 120),
@@ -37,6 +42,30 @@ export function crearEsquemaSolicitud(hoy: string, locale: Locale) {
     tasaAnual: decimal().refine((v) => Number(v) <= 100, m('VALOR_MAXIMO', { max: 100 })),
     periodicidad: z.string().refine(esPeriodicidad, m('REQUERIDO')),
   });
+
+  // Reglas entre campos. Van aparte, en una intersección, para que se evalúen aunque otros campos
+  // todavía tengan errores (el superRefine de un objeto de zod solo corre si todo el objeto es válido).
+  const cruzadas = z.object({
+    fechaNacimiento: z.string(),
+    antiguedadAnios: z.string(),
+    cantidadCuotas: z.string(),
+    periodicidad: z.string(),
+  }).superRefine((v, ctx) => {
+    const antiguedad = Number(v.antiguedadAnios);
+    if (esFechaValida(v.fechaNacimiento) && v.fechaNacimiento < hoy && /^\d+$/.test(v.antiguedadAnios)) {
+      const edad = calcularEdad(v.fechaNacimiento, hoy);
+      const max = antiguedadMaxima(edad);
+      if (antiguedad > max) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['antiguedadAnios'], message: m('ANTIGUEDAD_INCONSISTENTE', { max, edad }) });
+      }
+    }
+    if (esPeriodicidad(v.periodicidad) && /^\d+$/.test(v.cantidadCuotas)
+      && Number(v.cantidadCuotas) / PERIODOS_POR_ANIO[v.periodicidad] > PLAZO_MAXIMO_ANIOS) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cantidadCuotas'], message: m('PLAZO_MAXIMO_EXCEDIDO', { max: PLAZO_MAXIMO_ANIOS }) });
+    }
+  });
+
+  return z.intersection(base, cruzadas);
 }
 
 export type ValoresSolicitud = z.input<ReturnType<typeof crearEsquemaSolicitud>>;

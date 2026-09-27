@@ -1,6 +1,7 @@
 import { puedeEjecutar, resolverMensaje } from '@credito/domain';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ApiError } from '../../shared/api/ApiError';
 import { useSolicitud } from '../../shared/api/solicitudes';
 import { formatearDinero, formatearRelativo, numeroSolicitud, textoPlazo } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
@@ -28,6 +29,7 @@ export function DictamenPage() {
   const [observaciones, setObservaciones] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [pendiente, setPendiente] = useState<AccionDictamen | null>(null);
+  const [conflicto, setConflicto] = useState<string | null>(null);
   const enviando = useRef(false);
 
   if (consulta.isPending) return <Cargando />;
@@ -57,6 +59,11 @@ export function DictamenPage() {
     } catch (e) {
       const accion = pendiente;
       setPendiente(null);
+      // 409: otro analista la dictaminó mientras tanto. Se explica en un modal; la consulta ya se refrescó.
+      if (e instanceof ApiError && e.status === 409) {
+        setConflicto(e.message);
+        return;
+      }
       avisarError(toast, e, { generico: t('comun.errorGenerico'), reintentar: t('comun.reintentar') }, () => setPendiente(accion));
     } finally {
       enviando.current = false;
@@ -134,6 +141,17 @@ export function DictamenPage() {
         cargando={dictaminar.isPending}
         onConfirmar={() => void confirmar()}
         onCancelar={() => setPendiente(null)}
+      />
+      <ConfirmDialog
+        abierto={conflicto !== null}
+        tono="error"
+        titulo={t('error.yaDictaminadaTitulo')}
+        mensaje={t('error.conflictoTexto')}
+        cita={conflicto ?? undefined}
+        etiquetaConfirmar={t('comite.volverBandeja')}
+        etiquetaCancelar={t('comun.entendido')}
+        onConfirmar={() => navegar('/comite')}
+        onCancelar={() => setConflicto(null)}
       />
     </>
   );

@@ -8,13 +8,13 @@ export function Encabezado({ migas = [], titulo, subtitulo, acciones }: {
   migas?: Miga[]; titulo: ReactNode; subtitulo?: ReactNode; acciones?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-4 border-b border-line pb-4.5">
+    <div className="flex flex-wrap items-end gap-4">
       <div className="grid min-w-0 gap-1.5">
         {migas.length > 0 && (
           <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[12.5px] font-medium text-muted">
             {migas.map((m, i) => (
               <span key={i} className="flex items-center gap-1.5">
-                {m.a ? <Link to={m.a} className="text-accent hover:underline">{m.texto}</Link> : <span>{m.texto}</span>}
+                {m.a ? <Link to={m.a} className="text-accent-strong hover:underline">{m.texto}</Link> : <span>{m.texto}</span>}
                 {i < migas.length - 1 && <span aria-hidden="true">/</span>}
               </span>
             ))}

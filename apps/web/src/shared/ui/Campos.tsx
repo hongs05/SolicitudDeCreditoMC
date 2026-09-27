@@ -3,20 +3,21 @@ import {
   type SelectHTMLAttributes, type TextareaHTMLAttributes,
 } from 'react';
 
-const BASE = 'w-full min-w-0 rounded-[10px] border border-line-strong bg-surface px-2.5 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-faint focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-soft aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger-soft';
+/** Clases comunes de los controles de formulario. */
+export const CLASE_CONTROL = 'w-full min-w-0 rounded-[10px] border border-input bg-surface px-2.5 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-faint focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent/30 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger-soft';
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  ({ className = '', ...resto }, ref) => <input ref={ref} {...resto} className={`${BASE} ${className}`} />,
+  ({ className = '', ...resto }, ref) => <input ref={ref} {...resto} className={`${CLASE_CONTROL} ${className}`} />,
 );
 Input.displayName = 'Input';
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
-  ({ className = '', ...resto }, ref) => <select ref={ref} {...resto} className={`${BASE} ${className}`} />,
+  ({ className = '', ...resto }, ref) => <select ref={ref} {...resto} className={`${CLASE_CONTROL} control-select pr-[34px] ${className}`} />,
 );
 Select.displayName = 'Select';
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  ({ className = '', ...resto }, ref) => <textarea ref={ref} {...resto} className={`${BASE} min-h-22 resize-y ${className}`} />,
+  ({ className = '', ...resto }, ref) => <textarea ref={ref} {...resto} className={`${CLASE_CONTROL} min-h-22 resize-y ${className}`} />,
 );
 TextArea.displayName = 'TextArea';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CreditoNoAprobadoError, CreditoYaDesembolsadoError, EdadMaximaExcedidaError,
+  AntiguedadInconsistenteError, CreditoNoAprobadoError, CreditoYaDesembolsadoError, EdadMaximaExcedidaError, EdadMinimaNoAlcanzadaError,
   ObservacionesRequeridasError, ParametrosCreditoInvalidosError, TransicionInvalidaError,
 } from '../errors/errores';
 import { datosValidos } from '../testing/fixtures';
@@ -33,6 +33,16 @@ describe('Solicitud.crear', () => {
   it('rechaza mayores de 80 años', () => {
     expect(() => Solicitud.crear(datosValidos({ fechaNacimiento: '1945-09-24' }), 7, HOY, AHORA))
       .toThrow(EdadMaximaExcedidaError);
+  });
+
+  it('rechaza menores de 18 años', () => {
+    expect(() => Solicitud.crear(datosValidos({ fechaNacimiento: '2010-01-01' }), 7, HOY, AHORA))
+      .toThrow(EdadMinimaNoAlcanzadaError);
+  });
+
+  it('rechaza una antigüedad laboral imposible para la edad', () => {
+    expect(() => Solicitud.crear(datosValidos({ antiguedadAnios: 30 }), 7, HOY, AHORA))
+      .toThrow(AntiguedadInconsistenteError);
   });
 
   it('rechaza condiciones inválidas', () => {

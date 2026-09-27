@@ -56,9 +56,9 @@ export function Layout() {
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
-      <header className="sticky top-0 z-40 flex items-center gap-2.5 border-b border-line bg-band px-4 py-2.5 lg:hidden">
+      <header className="sticky top-0 z-40 flex items-center gap-2.5 border-b border-line bg-surface/92 px-4 py-2.5 backdrop-blur-md lg:hidden">
         <button type="button" onClick={() => setMenuAbierto(true)} aria-label={t('nav.abrirMenu')} aria-expanded={menuAbierto} aria-controls="menu-lateral"
-          className="grid size-9 place-items-center rounded-[10px] border border-line-strong bg-surface text-ink active:scale-95">
+          className="grid size-9 place-items-center rounded-full border border-line bg-surface text-ink active:scale-95">
           <Icono nombre="menu" />
         </button>
         <Marca />
@@ -69,9 +69,9 @@ export function Layout() {
       {menuAbierto && <div className="fixed inset-0 z-50 bg-overlay lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden="true" />}
 
       {/* La columna lleva el fondo para que la banda llegue al final aunque el menú sea sticky. */}
-      <div className="lg:bg-band">
+      <div className="lg:border-r lg:border-line lg:bg-surface">
         <aside id="menu-lateral"
-          className={`fixed inset-y-0 left-0 z-60 flex w-[min(290px,86vw)] flex-col gap-3.5 bg-band px-3 py-4.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-auto lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+          className={`fixed inset-y-0 left-0 z-60 flex w-[min(290px,86vw)] flex-col gap-3.5 bg-surface px-3 py-4.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-auto lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between px-2 py-1">
             <Marca />
             <button type="button" onClick={() => setMenuAbierto(false)} aria-label={t('nav.cerrarMenu')}
@@ -83,17 +83,17 @@ export function Layout() {
           <nav aria-label={t('nav.principal')} className="grid gap-0.5 overflow-y-auto">
             {grupos.map((grupo) => (
               <div key={grupo} className="grid gap-0.5">
-                <div className="px-2.5 pt-4 pb-1.5 text-[10.5px] font-semibold tracking-[0.12em] text-muted uppercase opacity-75">{t(grupo)}</div>
+                <div className="px-2.5 pt-4 pb-1.5 text-[10.5px] font-semibold tracking-[0.06em] text-faint uppercase">{t(grupo)}</div>
                 {enlaces.filter((e) => e.grupo === grupo).map((e) => {
                   const esActivo = activo === e.ruta;
                   const cuenta = e.contador ? contadores[e.contador] : undefined;
                   return (
                     <Link key={e.ruta} to={e.ruta} aria-current={esActivo ? 'page' : undefined}
-                      className={`relative flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13.5px] font-medium ${esActivo ? 'bg-accent-soft text-accent-strong before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-accent' : 'text-muted hover:bg-surface-2 hover:text-ink'}`}>
+                      className={`relative flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13.5px] font-semibold ${esActivo ? 'bg-accent-soft text-accent-strong' : 'text-muted hover:bg-surface-2 hover:text-ink'}`}>
                       <Icono nombre={e.icono} />
                       {t(e.clave)}
                       {cuenta !== undefined && (
-                        <span className={`ml-auto inline-grid h-5 min-w-5 place-items-center rounded px-1.5 font-mono text-[11px] ${cuenta > 0 ? 'bg-maize text-[#3d2e00]' : 'bg-surface-3 text-muted'}`}>{cuenta}</span>
+                        <span className={`ml-auto inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[11px] ${esActivo ? 'bg-accent text-on-accent' : cuenta > 0 ? 'bg-maize text-[#3d2e00]' : 'bg-surface-3 text-ink'}`}>{cuenta}</span>
                       )}
                     </Link>
                   );
@@ -107,7 +107,7 @@ export function Layout() {
               <Icono nombre="idioma" />
               <span aria-hidden="true">{t('nav.idioma')}</span>
               <select aria-label={t('nav.idioma')} value={locale} onChange={(e) => cambiarLocale(e.target.value as Locale)}
-                className="ml-auto rounded-full border border-line-strong bg-surface px-2 py-1 text-xs text-ink">
+                className="control-select ml-auto rounded-full border border-line-strong bg-surface py-1 pl-2.5 text-xs text-ink [background-position:right_6px_center] [background-size:14px] pr-6.5">
                 <option value="es">Español</option>
                 <option value="en">English</option>
               </select>
@@ -127,8 +127,8 @@ export function Layout() {
                 )}
                 <button type="button" onClick={() => setPopAbierto((v) => !v)} aria-haspopup="menu" aria-expanded={popAbierto}
                   aria-label={t('nav.menuUsuario', { usuario: usuario.username })}
-                  className="flex w-full items-center gap-2.5 rounded-[14px] border border-line bg-surface p-2 text-left text-ink hover:bg-surface-2">
-                  <span aria-hidden="true" className="grid size-7.5 place-items-center rounded-md bg-accent-soft text-xs font-bold text-accent uppercase">{usuario.username.slice(0, 2)}</span>
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-line bg-surface p-2 text-left text-ink hover:bg-surface-2">
+                  <span aria-hidden="true" className="grid size-7.5 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-bold text-accent-strong uppercase">{usuario.username.slice(0, 2)}</span>
                   <span className="grid min-w-0 leading-tight">
                     <b className="font-semibold">{usuario.username}</b>
                     <span className="justify-self-start rounded-full bg-surface-3 px-2 py-px font-mono text-[10.5px] text-muted">{usuario.rol}</span>

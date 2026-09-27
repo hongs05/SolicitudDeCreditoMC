@@ -28,7 +28,7 @@ describe('cliente HTTP', () => {
 
   it('convierte las respuestas de error en ApiError', async () => {
     servidor.use(http.post('/api/v1/eco', () => HttpResponse.json({
-      statusCode: 400, code: 'VALIDACION', message: 'Datos inválidos',
+      statusCode: 400, code: 'VALIDACION', message: 'Los datos enviados no son válidos',
       details: [{ field: 'cedula', code: 'FORMATO_INVALIDO', message: 'El formato no es válido' }],
     }, { status: 400 })));
     const error = await crearHttpClient().post('/eco', {}).catch((e: unknown) => e);

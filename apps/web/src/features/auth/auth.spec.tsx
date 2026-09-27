@@ -31,7 +31,7 @@ describe('autenticación', () => {
     servidor.use(http.post('/api/v1/auth/refresh', () => HttpResponse.json(tokens(Rol.OFICIAL))));
     renderizar(rutas, { ruta: '/privado' });
     expect(await screen.findByText('contenido privado')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Iniciar sesión' })).not.toBeInTheDocument();
   });
 
   it('sin sesión redirige al login y vuelve a la ruta pedida al entrar', async () => {
@@ -39,19 +39,19 @@ describe('autenticación', () => {
     const { user } = renderizar(rutas, { ruta: '/privado' });
     await user.type(await screen.findByLabelText('Usuario'), 'oficial');
     await user.type(screen.getByLabelText('Contraseña'), 'Demo2026!');
-    await user.click(screen.getByRole('button', { name: 'Entrar' }));
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByText('contenido privado')).toBeInTheDocument();
   });
 
   it('muestra el mensaje de la API ante credenciales incorrectas', async () => {
     servidor.use(http.post('/api/v1/auth/login', () => HttpResponse.json(
-      { statusCode: 401, code: 'NO_AUTENTICADO', message: 'Credenciales inválidas o sesión expirada' }, { status: 401 },
+      { statusCode: 401, code: 'NO_AUTENTICADO', message: 'Usuario o contraseña incorrectos, o la sesión ha expirado' }, { status: 401 },
     )));
     const { user } = renderizar(rutas, { ruta: '/login' });
     await user.type(await screen.findByLabelText('Usuario'), 'x');
     await user.type(screen.getByLabelText('Contraseña'), 'y');
-    await user.click(screen.getByRole('button', { name: 'Entrar' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales inválidas o sesión expirada');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Usuario o contraseña incorrectos, o la sesión ha expirado');
   });
 
   it('RequireRol muestra 403 al rol equivocado y deja pasar a ADMIN', async () => {

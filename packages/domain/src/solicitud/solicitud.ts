@@ -4,7 +4,7 @@ import {
   CreditoNoAprobadoError, CreditoYaDesembolsadoError,
   ObservacionesRequeridasError, TransicionInvalidaError,
 } from '../errors/errores';
-import { calcularEdad, validarEdadMaxima } from './edad';
+import { calcularEdad, validarAntiguedad, validarEdad } from './edad';
 import { EstadoSolicitud, puedeEjecutar, TRANSICIONES } from './estado-solicitud';
 
 export interface DatosSolicitud {
@@ -37,7 +37,8 @@ export class Solicitud {
   private constructor(private props: SolicitudProps) {}
 
   static crear(datos: DatosSolicitud, creadaPorId: number, hoy: string, ahora: Date): Solicitud {
-    validarEdadMaxima(datos.fechaNacimiento, hoy);
+    const edad = validarEdad(datos.fechaNacimiento, hoy);
+    validarAntiguedad(datos.antiguedadAnios, edad);
     const solicitud = new Solicitud({
       ...datos,
       id: null,

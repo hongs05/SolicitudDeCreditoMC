@@ -4,7 +4,7 @@ import type { Traductor } from '../i18n/I18nProvider';
 export const MONEDA = { codigo: 'NIO', simbolo: 'C$' } as const;
 export const ZONA_NEGOCIO = 'America/Managua';
 
-const localeIntl = (locale: Locale) => (locale === 'es' ? 'es-NI' : 'en-US');
+export const localeIntl = (locale: Locale) => (locale === 'es' ? 'es-NI' : 'en-US');
 
 export const hoyNegocio = (): string => fechaEnZona(new Date(), ZONA_NEGOCIO);
 

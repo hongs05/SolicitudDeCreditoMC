@@ -1,5 +1,5 @@
 import { EstadoSolicitud, Rol } from '@credito/domain';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -11,6 +11,7 @@ import { DesembolsoPage } from './DesembolsoPage';
 const pantalla = (
   <Routes>
     <Route path="/desembolsos/:creditoId" element={<DesembolsoPage />} />
+    <Route path="/desembolsos" element={<p>bandeja de desembolsos</p>} />
   </Routes>
 );
 
@@ -62,7 +63,7 @@ describe('DesembolsoPage', () => {
     expect(await screen.findAllByRole('row')).toHaveLength(14);
     expect(screen.getByText('Totales')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Procesar desembolso' })).not.toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 desembolsado');
+    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 desembolsado correctamente');
     expect(screen.getByRole('status')).toHaveTextContent('cuenta terminada en 3004');
   });
 
@@ -82,7 +83,7 @@ describe('DesembolsoPage', () => {
     servidor.use(
       http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),
       http.post('/api/v1/desembolsos', () => HttpResponse.json({
-        statusCode: 400, code: 'VALIDACION', message: 'Datos inválidos',
+        statusCode: 400, code: 'VALIDACION', message: 'Los datos enviados no son válidos',
         details: [{ field: 'numeroCuenta', code: 'CUENTA_INVALIDA', message: 'La cuenta no pertenece al banco' }],
       }, { status: 400 })));
     const { user } = renderizar(pantalla, { ruta: '/desembolsos/9', usuario: usuarios.cajero });
@@ -95,7 +96,7 @@ describe('DesembolsoPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('muestra el error de negocio y deja el formulario', async () => {
+  it('si otro cajero ya lo desembolsó (409), lo explica en un modal y ofrece volver a la bandeja', async () => {
     servidor.use(
       http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),
       http.post('/api/v1/desembolsos', () => HttpResponse.json(
@@ -108,6 +109,9 @@ describe('DesembolsoPage', () => {
     await user.type(screen.getByLabelText('Número de cuenta'), '1002003004');
     await user.click(screen.getByRole('button', { name: 'Procesar desembolso' }));
     await user.click(screen.getAllByRole('button', { name: 'Procesar desembolso' })[1]!);
-    expect(await screen.findByRole('alert')).toHaveTextContent('El crédito ya fue desembolsado');
+    const modal = await screen.findByRole('dialog', { name: 'El crédito ya no se puede desembolsar' });
+    expect(modal).toHaveTextContent('El crédito ya fue desembolsado');
+    await user.click(within(modal).getByRole('button', { name: 'Volver a la bandeja' }));
+    expect(await screen.findByText('bandeja de desembolsos')).toBeInTheDocument();
   });
 });

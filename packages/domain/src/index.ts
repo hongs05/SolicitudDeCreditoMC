@@ -14,4 +14,6 @@ export * from './credito/cuota-nivelada';
 export * from './credito/vencimientos';
 export * from './credito/plan-amortizacion';
 export * from './solicitud/solicitud';
+export * from './solicitud/historial-cedula';
+export * from './solicitud/formatos';
 export * from './credito/credito';

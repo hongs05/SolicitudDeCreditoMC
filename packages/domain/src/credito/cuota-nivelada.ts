@@ -1,4 +1,4 @@
-import { ParametrosCreditoInvalidosError } from '../errors/errores';
+import { ParametrosCreditoInvalidosError, PlazoMaximoExcedidoError } from '../errors/errores';
 import { aCentavos, aUnidades } from './dinero';
 import { esPeriodicidad, Periodicidad, PERIODOS_POR_ANIO } from './periodicidad';
 
@@ -25,7 +25,7 @@ export function validarCondiciones(c: CondicionesCredito): void {
     throw new ParametrosCreditoInvalidosError('periodicidad');
   }
   if (c.cuotas / PERIODOS_POR_ANIO[c.periodicidad] > PLAZO_MAXIMO_ANIOS) {
-    throw new ParametrosCreditoInvalidosError('cuotas');
+    throw new PlazoMaximoExcedidoError(PLAZO_MAXIMO_ANIOS);
   }
 }
 

@@ -28,11 +28,11 @@ describe('autenticación', () => {
 
   it('credenciales incorrectas dan 401 traducido', async () => {
     const es = await app.agente().post('/api/v1/auth/login').send({ username: 'oficial', password: 'mala' }).expect(401);
-    expect(es.body).toMatchObject({ code: 'NO_AUTENTICADO', message: 'Credenciales inválidas o sesión expirada' });
+    expect(es.body).toMatchObject({ code: 'NO_AUTENTICADO', message: 'Usuario o contraseña incorrectos, o la sesión ha expirado' });
     const en = await app.agente()
       .post('/api/v1/auth/login').set('Accept-Language', 'en')
       .send({ username: 'nadie', password: 'x' }).expect(401);
-    expect(en.body.message).toBe('Invalid credentials or expired session');
+    expect(en.body.message).toBe('Incorrect username or password, or the session has expired');
   });
 
   it('login sin campos da 400 con detalles', async () => {

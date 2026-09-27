@@ -22,8 +22,8 @@ describe('DetallePage', () => {
     renderizar(pantalla, { ruta: '/solicitudes/5', usuario: usuarios.analista });
     expect(await screen.findByRole('heading', { level: 1, name: /Ana López/ })).toBeInTheDocument();
     expect(screen.getByText('Empresa Secreta S.A.')).toBeInTheDocument();
-    expect(screen.getByText('En espera del comité')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Dictaminar' })).toHaveAttribute('href', '/comite/5');
+    expect(screen.getByText('Pendiente de dictamen')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Emitir dictamen' })).toHaveAttribute('href', '/comite/5');
     expect(screen.queryByRole('link', { name: 'Plan de pagos' })).not.toBeInTheDocument();
     // Cuota 528,71 quincenal sobre 30 000 de ingreso: 528,71 × 2 / 30 000 ≈ 4 %.
     expect(screen.getByText('4 %')).toBeInTheDocument();
@@ -32,8 +32,8 @@ describe('DetallePage', () => {
   it('el oficial no ve la acción de dictaminar', async () => {
     servidor.use(http.get('/api/v1/solicitudes/5', () => HttpResponse.json(solicitudResponse())));
     renderizar(pantalla, { ruta: '/solicitudes/5', usuario: usuarios.oficial });
-    await screen.findByText('En espera del comité');
-    expect(screen.queryByRole('link', { name: 'Dictaminar' })).not.toBeInTheDocument();
+    await screen.findByText('Pendiente de dictamen');
+    expect(screen.queryByRole('link', { name: 'Emitir dictamen' })).not.toBeInTheDocument();
   });
 
   it('una solicitud desembolsada muestra el historial completo y enlaza al plan', async () => {
@@ -66,7 +66,7 @@ describe('DetallePage', () => {
     );
     renderizar(pantalla, { ruta: '/solicitudes/5', usuario: usuarios.cajero });
     expect(await screen.findByRole('link', { name: 'Desembolsar' })).toHaveAttribute('href', '/desembolsos/9');
-    expect(screen.getByText('Pendiente en caja.')).toBeInTheDocument();
+    expect(screen.getByText('Pendiente de desembolso en caja.')).toBeInTheDocument();
   });
 
   it('si la consulta falla ofrece reintentar', async () => {

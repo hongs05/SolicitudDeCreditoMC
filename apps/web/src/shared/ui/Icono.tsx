@@ -18,6 +18,8 @@ const TRAZOS = {
   idioma: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
   cerrar: 'M18 6 6 18M6 6l12 12',
   info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16v-4M12 8h.01',
+  izquierda: 'm15 18-6-6 6-6',
+  derecha: 'm9 18 6-6-6-6',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

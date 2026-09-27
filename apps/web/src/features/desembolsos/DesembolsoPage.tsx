@@ -1,6 +1,6 @@
 import { EstadoSolicitud, puedeEjecutar, resolverMensaje } from '@credito/domain';
 import { useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../shared/api/ApiError';
 import { useBancos } from '../../shared/api/catalogos';
 import { useCredito, useDesembolsar } from '../../shared/api/creditos';
@@ -32,6 +32,8 @@ export function DesembolsoPage() {
   const [cuenta, setCuenta] = useState('');
   const [errores, setErrores] = useState<{ banco?: string; cuenta?: string }>({});
   const [confirmando, setConfirmando] = useState(false);
+  const [conflicto, setConflicto] = useState<string | null>(null);
+  const navegar = useNavigate();
   const enviando = useRef(false);
 
   if (consulta.isPending) return <Cargando />;
@@ -70,6 +72,9 @@ export function DesembolsoPage() {
         } else {
           toast.error(e.message);
         }
+      } else if (e instanceof ApiError && (e.code === 'CREDITO_YA_DESEMBOLSADO' || e.code === 'CREDITO_NO_APROBADO')) {
+        // Otro cajero lo desembolsó, o el crédito cambió de estado: se explica en un modal.
+        setConflicto(e.message);
       } else {
         avisarError(toast, e, { generico: t('comun.errorGenerico'), reintentar: t('comun.reintentar') }, () => setConfirmando(true));
       }
@@ -162,6 +167,17 @@ export function DesembolsoPage() {
         cargando={desembolsar.isPending}
         onConfirmar={() => void confirmar()}
         onCancelar={() => setConfirmando(false)}
+      />
+      <ConfirmDialog
+        abierto={conflicto !== null}
+        tono="error"
+        titulo={t('error.noDesembolsableTitulo')}
+        mensaje={t('error.conflictoTexto')}
+        cita={conflicto ?? undefined}
+        etiquetaConfirmar={t('comite.volverBandeja')}
+        etiquetaCancelar={t('comun.entendido')}
+        onConfirmar={() => navegar('/desembolsos')}
+        onCancelar={() => setConflicto(null)}
       />
     </>
   );

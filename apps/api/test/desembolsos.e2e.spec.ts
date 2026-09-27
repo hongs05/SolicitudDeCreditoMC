@@ -46,7 +46,7 @@ describe('desembolsos', () => {
     const { creditoId, solicitudId } = await crearCreditoAprobado(app.db.prisma);
     await app.db.prisma.solicitud.update({ where: { id: solicitudId }, data: { estado: 'PENDIENTE' } });
     const r = await desembolsar({ creditoId, bancoId, numeroCuenta: '1002003004' }).expect(422);
-    expect(r.body).toMatchObject({ code: 'CREDITO_NO_APROBADO', message: 'Solo se desembolsan créditos aprobados' });
+    expect(r.body).toMatchObject({ code: 'CREDITO_NO_APROBADO', message: 'Solo es posible desembolsar créditos aprobados' });
     expect(await app.db.prisma.desembolso.count({ where: { creditoId } })).toBe(0);
   });
 
