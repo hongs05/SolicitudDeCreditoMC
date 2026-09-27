@@ -2,7 +2,7 @@ import boundaries from 'eslint-plugin-boundaries';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'apps/web/**'] },
+  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'] },
   ...tseslint.configs.recommended,
   {
     files: ['packages/domain/src/**/*.ts', 'apps/api/src/**/*.ts'],
