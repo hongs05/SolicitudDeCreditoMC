@@ -71,8 +71,8 @@ export function crearHttpClient(base = '/api/v1'): HttpClient {
     }
 
     const error = await leerError(respuesta);
-    const esAuth = ruta.startsWith('/auth/');
-    if (error.status === 401 && error.code === 'NO_AUTENTICADO' && !reintento && !esAuth) {
+    const esAuthSinReintento = ruta === '/auth/login' || ruta === '/auth/refresh';
+    if (error.status === 401 && error.code === 'NO_AUTENTICADO' && !reintento && !esAuthSinReintento) {
       if (await refrescar()) return solicitar<T>(metodo, ruta, cuerpo, true);
     }
     if (error.status === 401 && ruta !== '/auth/login') sesion.limpiar();

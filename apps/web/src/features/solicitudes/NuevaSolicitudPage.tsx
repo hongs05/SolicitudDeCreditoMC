@@ -55,8 +55,12 @@ export function NuevaSolicitudPage() {
   useEffect(() => {
     if (esquemaAnterior.current === esquema) return;
     esquemaAnterior.current = esquema;
-    if (isSubmitted) void trigger();
-  }, [esquema, isSubmitted, trigger]);
+    if (isSubmitted) {
+      void trigger();
+    } else if (Object.keys(errors).length > 0) {
+      void trigger(Object.keys(errors) as NombreCampo[]);
+    }
+  }, [esquema, isSubmitted, errors, trigger]);
 
   const resumen = resumirSolicitud(watch(), hoy);
 
@@ -67,8 +71,13 @@ export function NuevaSolicitudPage() {
       navegar('/solicitudes');
     } catch (error) {
       if (error instanceof ApiError && error.details.length > 0) {
-        for (const detalle of error.details) {
-          if (esCampo(detalle.field)) setError(detalle.field, { message: detalle.message });
+        const camposConocidos = error.details.filter((detalle) => esCampo(detalle.field));
+        if (camposConocidos.length > 0) {
+          for (const detalle of camposConocidos) {
+            if (esCampo(detalle.field)) setError(detalle.field, { message: detalle.message });
+          }
+        } else {
+          toast.error(error.message);
         }
       } else {
         toast.error(error instanceof ApiError ? error.message : String(error));

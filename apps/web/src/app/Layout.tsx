@@ -1,5 +1,5 @@
 import { type Locale, tieneRol } from '@credito/domain';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthProvider';
 import { useT } from '../shared/i18n/I18nProvider';
 import { Button } from '../shared/ui/Button';
@@ -9,7 +9,12 @@ import { ENLACES } from './navegacion';
 export function Layout() {
   const { t, locale, cambiarLocale } = useT();
   const { usuario, cerrarSesion } = useAuth();
+  const location = useLocation();
   const enlaces = ENLACES.filter((e) => usuario && tieneRol(usuario.rol, e.roles));
+
+  const salir = () => {
+    void cerrarSesion().catch(() => undefined);
+  };
 
   return (
     <div className="min-h-screen">
@@ -41,11 +46,11 @@ export function Layout() {
             </select>
           </label>
           {usuario && <span className="text-sm text-slate-600">{usuario.username} · {usuario.rol}</span>}
-          <Button variante="secundario" onClick={() => void cerrarSesion()}>{t('nav.salir')}</Button>
+          <Button variante="secundario" onClick={salir}>{t('nav.salir')}</Button>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <ErrorBoundary mensaje={t('comun.errorRender')}>
+        <ErrorBoundary key={location.pathname} mensaje={t('comun.errorRender')}>
           <Outlet />
         </ErrorBoundary>
       </main>

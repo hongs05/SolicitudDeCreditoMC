@@ -31,4 +31,22 @@ describe('ListadoPage', () => {
     expect(await screen.findByText('No hay resultados')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Nueva solicitud' })).not.toBeInTheDocument();
   });
+
+  it('si la consulta falla muestra el error y Reintentar la repite', async () => {
+    let peticiones = 0;
+    servidor.use(http.get('/api/v1/solicitudes', () => {
+      peticiones++;
+      return peticiones === 1
+        ? HttpResponse.json({ statusCode: 500, code: 'ERROR_INTERNO', message: 'Falló el servidor' }, { status: 500 })
+        : HttpResponse.json(paginado([solicitudResponse()]));
+    }));
+    const { user } = renderizar(<ListadoPage />, { usuario: usuarios.oficial });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Falló el servidor');
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(screen.queryByText('No hay resultados')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(await screen.findByText('Ana López')).toBeInTheDocument();
+    expect(peticiones).toBe(2);
+  });
 });

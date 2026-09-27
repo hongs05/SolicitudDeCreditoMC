@@ -43,4 +43,23 @@ describe('ConsultaPage', () => {
     await user.click(screen.getByRole('button', { name: /CR-000002/ }));
     expect(await screen.findAllByRole('row')).toHaveLength(13);
   });
+
+  it('no muestra el plan anterior mientras carga la nueva búsqueda', async () => {
+    conCreditos(1);
+    const user = await buscar('0010101900001A');
+    expect(await screen.findByText('Plan de pagos')).toBeInTheDocument();
+    expect(await screen.findAllByRole('row')).toHaveLength(13);
+
+    servidor.use(
+      http.get('/api/v1/creditos', async () => {
+        await new Promise((r) => setTimeout(r, 50));
+        return HttpResponse.json(paginado([]));
+      }),
+    );
+    await user.clear(screen.getByLabelText('Cédula'));
+    await user.type(screen.getByLabelText('Cédula'), 'OTRA');
+    await user.click(screen.getByRole('button', { name: 'Buscar' }));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(await screen.findByText('La cédula no tiene créditos.')).toBeInTheDocument();
+  });
 });

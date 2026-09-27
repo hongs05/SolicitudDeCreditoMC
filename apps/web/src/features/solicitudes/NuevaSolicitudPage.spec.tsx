@@ -76,6 +76,17 @@ describe('NuevaSolicitudPage', () => {
     expect(screen.getByLabelText('Cédula')).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('muestra un toast cuando el error 400 no corresponde a ningún campo conocido', async () => {
+    servidor.use(http.post('/api/v1/solicitudes', () => HttpResponse.json({
+      statusCode: 400, code: 'VALIDACION', message: 'No se pudo procesar la solicitud',
+      details: [{ field: 'otroCampo', code: 'FORMATO_INVALIDO', message: 'Campo desconocido inválido' }],
+    }, { status: 400 })));
+    const { user } = renderizar(pantalla, { ruta: '/solicitudes/nueva', usuario: oficial });
+    await llenar(user);
+    await user.click(screen.getByRole('button', { name: 'Registrar solicitud' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo procesar la solicitud');
+  });
+
   it('envía el cuerpo con el formato de la API y vuelve al listado', async () => {
     let cuerpo: unknown;
     servidor.use(http.post('/api/v1/solicitudes', async ({ request }) => {
@@ -91,6 +102,18 @@ describe('NuevaSolicitudPage', () => {
       tipoEmpleoId: 1, antiguedadAnios: 5, cantidadCuotas: 12,
       montoSolicitado: '10000.00', tasaAnual: '12.00', ingresoMensual: '30000.00', periodicidad: 'MENSUAL',
     });
+  });
+
+  it('traduce el error de un campo tocado al cambiar el idioma antes de enviar', async () => {
+    const { user } = renderizar(pantalla, { ruta: '/solicitudes/nueva', usuario: oficial });
+    const cedula = screen.getByLabelText('Cédula');
+    await user.click(cedula);
+    fireEvent.blur(cedula);
+    expect(await screen.findByText('Este campo es obligatorio')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'EN' }));
+    expect(await screen.findByText('This field is required')).toBeInTheDocument();
+    expect(screen.queryByText('Este campo es obligatorio')).not.toBeInTheDocument();
   });
 
   it('traduce los errores visibles al cambiar el idioma', async () => {

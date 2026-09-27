@@ -4,6 +4,7 @@ import { formatearDinero, formatearFecha } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
 import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { type Columna, Tabla } from '../../shared/ui/Tabla';
 
 export function TablaPlan({ creditoId }: { creditoId: number }) {
@@ -22,7 +23,11 @@ export function TablaPlan({ creditoId }: { creditoId: number }) {
 
   return (
     <Card titulo={t('plan.titulo')}>
-      {plan.isPending ? <Cargando /> : <Tabla columnas={columnas} filas={plan.data?.cuotas ?? []} claveFila={(c) => c.numero} />}
+      {plan.isPending ? <Cargando /> : plan.isError ? (
+        <ErrorConsulta error={plan.error} onReintentar={() => void plan.refetch()} />
+      ) : (
+        <Tabla columnas={columnas} filas={plan.data?.cuotas ?? []} claveFila={(c) => c.numero} />
+      )}
     </Card>
   );
 }

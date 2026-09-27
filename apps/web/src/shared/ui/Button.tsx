@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import { type ButtonHTMLAttributes, forwardRef } from 'react';
 
 type Variante = 'primario' | 'secundario' | 'peligro';
 
@@ -13,14 +13,18 @@ export interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   cargando?: boolean;
 }
 
-export function Button({ variante = 'primario', cargando = false, disabled, className = '', type = 'button', ...resto }: BotonProps) {
+export const Button = forwardRef<HTMLButtonElement, BotonProps>(function Button(
+  { variante = 'primario', cargando = false, disabled, className = '', type = 'button', ...resto },
+  ref,
+) {
   return (
     <button
       {...resto}
+      ref={ref}
       type={type}
       disabled={disabled || cargando}
       aria-busy={cargando || undefined}
       className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${ESTILOS[variante]} ${className}`}
     />
   );
-}
+});

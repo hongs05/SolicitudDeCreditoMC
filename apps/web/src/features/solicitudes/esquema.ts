@@ -3,7 +3,7 @@ import {
 } from '@credito/domain';
 import { z } from 'zod';
 
-export const PATRON_DECIMAL = /^\d+(\.\d{1,2})?$/;
+export const PATRON_DECIMAL = /^\d{1,12}(\.\d{1,2})?$/;
 
 export function crearEsquemaSolicitud(hoy: string, locale: Locale) {
   const m = (code: string, params?: Record<string, unknown>) => resolverMensaje(code, params, locale);
@@ -57,7 +57,10 @@ export const VALORES_INICIALES: ValoresSolicitud = {
   periodicidad: '',
 };
 
-const dosDecimales = (v: string) => Number(v).toFixed(2);
+const dosDecimales = (v: string): string => {
+  const [entero, fraccion = ''] = v.split('.');
+  return `${entero}.${fraccion.padEnd(2, '0').slice(0, 2)}`;
+};
 
 export const aCuerpoSolicitud = (v: ValoresSolicitud): Record<string, unknown> => ({
   nombreCompleto: v.nombreCompleto.trim(),

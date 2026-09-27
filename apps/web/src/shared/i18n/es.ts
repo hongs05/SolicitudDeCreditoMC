@@ -21,6 +21,7 @@ export const es = {
   'comun.prohibidoTitulo': 'Acceso denegado',
   'comun.prohibido': 'Tu rol no tiene permiso para ver esta página.',
   'comun.errorRender': 'Algo salió mal al mostrar esta pantalla.',
+  'comun.errorGenerico': 'Ocurrió un error al cargar los datos',
   'comun.buscar': 'Buscar',
   'comun.todos': 'Todos',
   'comun.ver': 'Ver',

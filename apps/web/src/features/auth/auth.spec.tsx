@@ -2,7 +2,7 @@ import { Rol } from '@credito/domain';
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Layout } from '../../app/Layout';
 import { renderizar } from '../../test/render';
 import { servidor } from '../../test/servidor';
@@ -76,5 +76,20 @@ describe('autenticación', () => {
     const { user } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
     await user.selectOptions(await screen.findByLabelText('Idioma'), 'en');
     expect(screen.getByRole('link', { name: 'New application' })).toBeInTheDocument();
+  });
+
+  it('cerrar sesión llama a logout, limpia la sesión y vacía la caché de queries', async () => {
+    let peticionesLogout = 0;
+    servidor.use(http.post('/api/v1/auth/logout', () => {
+      peticionesLogout++;
+      return new HttpResponse(null, { status: 204 });
+    }));
+    const { user, queryClient } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
+    const limpiarSpy = vi.spyOn(queryClient, 'clear');
+    await screen.findByText('contenido privado');
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    expect(await screen.findByLabelText('Usuario')).toBeInTheDocument();
+    expect(peticionesLogout).toBe(1);
+    expect(limpiarSpy).toHaveBeenCalledOnce();
   });
 });

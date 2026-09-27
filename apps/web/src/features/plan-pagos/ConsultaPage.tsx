@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react';
-import { useCreditos } from '../../shared/api/creditos';
+import { useCreditosPorCedula } from '../../shared/api/creditos';
 import { formatearDinero, textoPlazo } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
 import { BadgeEstado } from '../../shared/ui/Badge';
@@ -7,6 +7,7 @@ import { Button } from '../../shared/ui/Button';
 import { Field, Input } from '../../shared/ui/Campos';
 import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { TablaPlan } from './TablaPlan';
 
 export function ConsultaPage() {
@@ -14,7 +15,7 @@ export function ConsultaPage() {
   const [texto, setTexto] = useState('');
   const [cedula, setCedula] = useState('');
   const [elegido, setElegido] = useState<number | null>(null);
-  const consulta = useCreditos({ cedula, page: 1 }, cedula !== '');
+  const consulta = useCreditosPorCedula(cedula);
   const creditos = consulta.data?.items ?? [];
   const seleccionado = creditos.length === 1 ? creditos[0]!.id : elegido;
 
@@ -36,6 +37,9 @@ export function ConsultaPage() {
       </Card>
 
       {cedula && consulta.isPending && <Cargando />}
+      {cedula && consulta.isError && (
+        <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
+      )}
       {cedula && consulta.isSuccess && creditos.length === 0 && (
         <p className="text-sm text-slate-600">{t('plan.sinCreditos')}</p>
       )}

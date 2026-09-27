@@ -23,6 +23,7 @@ export const en: Record<ClaveTexto, string> = {
   'comun.prohibidoTitulo': 'Access denied',
   'comun.prohibido': 'Your role is not allowed to view this page.',
   'comun.errorRender': 'Something went wrong while displaying this screen.',
+  'comun.errorGenerico': 'Something went wrong while loading the data',
   'comun.buscar': 'Search',
   'comun.todos': 'All',
   'comun.ver': 'View',

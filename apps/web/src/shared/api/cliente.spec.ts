@@ -87,4 +87,25 @@ describe('cliente HTTP', () => {
     servidor.use(http.post('/api/v1/vacio', () => new HttpResponse(null, { status: 204 })));
     await expect(crearHttpClient().post('/vacio')).resolves.toBeUndefined();
   });
+
+  it('logout con token vencido refresca y reintenta como cualquier ruta', async () => {
+    sesion.establecer({ accessToken: 'vencido', usuario });
+    let peticionesLogout = 0;
+    let refrescos = 0;
+    servidor.use(
+      http.post('/api/v1/auth/refresh', () => {
+        refrescos++;
+        return HttpResponse.json({ accessToken: 'nuevo', usuario });
+      }),
+      http.post('/api/v1/auth/logout', ({ request }) => {
+        peticionesLogout++;
+        return request.headers.get('authorization') === 'Bearer nuevo'
+          ? new HttpResponse(null, { status: 204 })
+          : noAutenticado();
+      }),
+    );
+    await expect(crearHttpClient().post('/auth/logout')).resolves.toBeUndefined();
+    expect(peticionesLogout).toBe(2);
+    expect(refrescos).toBe(1);
+  });
 });

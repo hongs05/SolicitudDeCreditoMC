@@ -74,6 +74,23 @@ describe('DesembolsoPage', () => {
     expect(await screen.findAllByRole('row')).toHaveLength(13);
   });
 
+  it('muestra el error 400 de numeroCuenta o bancoId junto al campo, no en un toast', async () => {
+    servidor.use(
+      http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),
+      http.post('/api/v1/desembolsos', () => HttpResponse.json({
+        statusCode: 400, code: 'VALIDACION', message: 'Datos inválidos',
+        details: [{ field: 'numeroCuenta', code: 'CUENTA_INVALIDA', message: 'La cuenta no pertenece al banco' }],
+      }, { status: 400 })));
+    const { user } = renderizar(pantalla, { ruta: '/desembolsos/9', usuario: usuarios.cajero });
+    await screen.findByRole('option', { name: 'LAFISE' });
+    await user.selectOptions(screen.getByLabelText('Banco destino'), '1');
+    await user.type(screen.getByLabelText('Número de cuenta'), '1002003004');
+    await user.click(screen.getByRole('button', { name: 'Procesar desembolso' }));
+    await user.click(screen.getAllByRole('button', { name: 'Procesar desembolso' })[1]!);
+    expect(await screen.findByText('La cuenta no pertenece al banco')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('muestra el error de negocio y deja el formulario', async () => {
     servidor.use(
       http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),

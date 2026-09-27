@@ -7,6 +7,7 @@ import { formatearDinero, textoPlazo } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
 import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Paginador } from '../../shared/ui/Paginador';
 import { type Columna, Tabla } from '../../shared/ui/Tabla';
 
@@ -26,7 +27,9 @@ export function BandejaPage() {
 
   return (
     <Card titulo={t('desembolso.titulo')}>
-      {consulta.isPending ? <Cargando /> : (
+      {consulta.isPending ? <Cargando /> : consulta.isError ? (
+        <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
+      ) : (
         <>
           <Tabla columnas={columnas} filas={consulta.data?.items ?? []} claveFila={(c) => c.id} />
           {consulta.data && consulta.data.total > 0 && (

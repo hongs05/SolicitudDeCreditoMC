@@ -18,6 +18,13 @@ export const useCreditos = (f: FiltrosCreditos, habilitado = true) =>
     enabled: habilitado,
   });
 
+export const useCreditosPorCedula = (cedula: string) =>
+  useQuery({
+    queryKey: ['creditos', { cedula, page: 1 }],
+    queryFn: () => api.get<Paginado<CreditoResumen>>(`/creditos?${aQuery({ cedula, page: 1 })}`),
+    enabled: cedula !== '',
+  });
+
 export const useCredito = (id: number) =>
   useQuery({ queryKey: ['credito', id], queryFn: () => api.get<CreditoResponse>(`/creditos/${id}`) });
 
