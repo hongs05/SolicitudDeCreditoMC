@@ -66,11 +66,10 @@ function useDiferido<T>(valor: T, ms = 400): T {
   return diferido;
 }
 
-function Bloque({ numero, titulo, detalle, children }: { numero: string; titulo: string; detalle?: string; children: ReactNode }) {
+function Bloque({ titulo, detalle, children }: { titulo: string; detalle?: string; children: ReactNode }) {
   return (
     <fieldset className="grid min-w-0 gap-3.5 border-0 px-5 py-5.5 not-first:border-t not-first:border-dashed not-first:border-line-strong">
       <legend className="float-left mb-0.5 flex w-full items-baseline gap-2.5 p-0 text-[17px] font-bold tracking-[-0.02em]">
-        <span aria-hidden="true" className="font-mono text-xs font-medium tracking-normal text-accent">{numero}</span>
         {titulo}
         {detalle && <span className="text-[12.5px] font-normal tracking-normal text-muted">{detalle}</span>}
       </legend>
@@ -186,7 +185,7 @@ export function NuevaSolicitudPage() {
       />
       <form onSubmit={enviar} noValidate className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-w-0 rounded-[14px] border border-line bg-surface">
-          <Bloque numero="01" titulo={t('solicitud.personal')} detalle={t('solicitud.delCliente')}>
+          <Bloque titulo={t('solicitud.personal')} detalle={t('solicitud.delCliente')}>
             {campo('nombreCompleto', { autoComplete: 'name' }, { ancho: true })}
             {campo('cedula', { className: 'font-mono text-[13px]', placeholder: '001-000000-0000X' })}
             <Field id="fechaNacimiento" etiqueta={t(ETIQUETAS.fechaNacimiento)} error={errors.fechaNacimiento?.message}>
@@ -194,9 +193,9 @@ export function NuevaSolicitudPage() {
               <FechaNacimiento control={control} max={sumarDias(hoy, -1)} referencia={sumarMeses(hoy, -360)} />
             </Field>
             {campo('correo', { type: 'email', autoComplete: 'email' })}
-            {campo('telefono', { type: 'tel', autoComplete: 'tel', className: 'font-mono text-[13px]' })}
+            {campo('telefono', { type: 'tel', autoComplete: 'tel', className: 'tabular-nums' })}
           </Bloque>
-          <Bloque numero="02" titulo={t('solicitud.laboral')}>
+          <Bloque titulo={t('solicitud.laboral')}>
             <Field id="tipoEmpleoId" etiqueta={t(ETIQUETAS.tipoEmpleoId)} error={errors.tipoEmpleoId?.message}>
               <Select {...register('tipoEmpleoId')}>
                 <option value="">{t('campo.seleccione')}</option>
@@ -204,13 +203,13 @@ export function NuevaSolicitudPage() {
               </Select>
             </Field>
             {campo('empresa')}
-            {campo('antiguedadAnios', { inputMode: 'numeric', className: 'font-mono text-[13px]' })}
-            {campo('ingresoMensual', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { prefijo: 'C$' })}
+            {campo('antiguedadAnios', { inputMode: 'numeric', className: 'tabular-nums' })}
+            {campo('ingresoMensual', { inputMode: 'decimal', className: 'tabular-nums' }, { prefijo: 'C$' })}
           </Bloque>
-          <Bloque numero="03" titulo={t('solicitud.condiciones')}>
-            {campo('montoSolicitado', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { prefijo: 'C$' })}
-            {campo('tasaAnual', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { sufijo: '%' })}
-            {campo('cantidadCuotas', { inputMode: 'numeric', className: 'font-mono text-[13px]' })}
+          <Bloque titulo={t('solicitud.condiciones')}>
+            {campo('montoSolicitado', { inputMode: 'decimal', className: 'tabular-nums' }, { prefijo: 'C$' })}
+            {campo('tasaAnual', { inputMode: 'decimal', className: 'tabular-nums' }, { sufijo: '%' })}
+            {campo('cantidadCuotas', { inputMode: 'numeric', className: 'tabular-nums' })}
             <div className="grid content-start gap-1.5">
               <span id="periodicidad-etiqueta" className="text-[12.5px] font-semibold text-muted">{t(ETIQUETAS.periodicidad)}</span>
               <div role="radiogroup" aria-labelledby="periodicidad-etiqueta" aria-invalid={errorPeriodicidad ? true : undefined}
@@ -219,7 +218,7 @@ export function NuevaSolicitudPage() {
                 {PERIODICIDADES.map((p) => (
                   <label key={p} className="relative cursor-pointer">
                     <input type="radio" value={p} {...register('periodicidad')} className="peer sr-only" />
-                    <span className="block rounded p-1.5 text-center text-[13px] text-muted transition-colors peer-checked:bg-accent peer-checked:font-semibold peer-checked:text-on-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
+                    <span className="block rounded p-1.5 text-center text-[13px] max-sm:py-2.5 text-muted transition-colors peer-checked:bg-accent peer-checked:font-semibold peer-checked:text-on-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
                       {t(`periodicidad.${p}`)}
                     </span>
                   </label>
@@ -228,7 +227,7 @@ export function NuevaSolicitudPage() {
               {errorPeriodicidad && <p id="periodicidad-error" className="text-xs text-danger">{errorPeriodicidad}</p>}
             </div>
           </Bloque>
-          <div className="flex flex-wrap justify-between gap-2.5 rounded-b-[14px] border-t border-line bg-surface-2 px-5 py-3.5">
+          <div className="flex flex-wrap justify-between gap-2.5 rounded-b-[14px] border-t border-line bg-surface-2 px-5 py-3.5 max-sm:grid">
             <div className="flex flex-wrap gap-2">
               <Button variante="secundario" tamano="sm" onClick={() => (isDirty ? setConfirmarLimpiar(true) : reset(VALORES_INICIALES))}>
                 {t('solicitud.limpiar')}

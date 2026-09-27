@@ -18,7 +18,7 @@ const TAMANOS: Record<Tamano, string> = {
 
 // Clases compartidas con los enlaces que se ven como botón.
 export const claseBoton = (variante: Variante = 'primario', tamano: Tamano = 'md') =>
-  `relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold leading-tight transition-[transform,background-color,opacity] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:opacity-45 aria-disabled:active:scale-100 ${ESTILOS[variante]} ${TAMANOS[tamano]}`;
+  `relative inline-flex items-center justify-center gap-2 whitespace-nowrap max-sm:min-h-11 rounded-full font-semibold leading-tight transition-[transform,background-color,opacity] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:opacity-45 aria-disabled:active:scale-100 ${ESTILOS[variante]} ${TAMANOS[tamano]}`;
 
 export interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variante?: Variante;

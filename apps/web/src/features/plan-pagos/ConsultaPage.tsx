@@ -33,7 +33,7 @@ function ResumenCredito({ credito }: { credito: CreditoResumen }) {
   const { t, locale } = useT();
   const detalle = useCredito(credito.id);
   const grupo = 'grid content-start gap-1.5 p-5';
-  const titulo = 'text-[11px] font-semibold tracking-[0.1em] text-muted uppercase';
+  const titulo = 'text-[12.5px] font-semibold text-muted';
   return (
     <section className="grid rounded-[14px] border border-line bg-surface md:grid-cols-3 md:divide-x md:divide-line max-md:divide-y max-md:divide-line">
       <div className={grupo}>
@@ -43,7 +43,7 @@ function ResumenCredito({ credito }: { credito: CreditoResumen }) {
       </div>
       <div className={grupo}>
         <span className={titulo}>{t('comite.credito')}</span>
-        <b className="font-mono font-medium">{formatearDinero(credito.monto, locale)}</b>
+        <b className="font-semibold tabular-nums">{formatearDinero(credito.monto, locale)}</b>
         <span className="text-[12.5px] text-muted">
           {detalle.data && `${t('plan.tasaAnual', { tasa: formatearTasa(detalle.data.tasaAnual, locale) })} · `}
           {textoPlazo(credito.plazo, credito.periodicidad, t)}

@@ -10,9 +10,9 @@ import { avisarError } from '../../shared/ui/avisarError';
 import { BadgeEstado } from '../../shared/ui/Badge';
 import { Button } from '../../shared/ui/Button';
 import { Field, Input, Select } from '../../shared/ui/Campos';
-import { Cargando } from '../../shared/ui/Cargando';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { DatoLectura, GrupoDatos } from '../../shared/ui/DatoLectura';
+import { EsqueletoDetalle } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Icono } from '../../shared/ui/Icono';
@@ -36,7 +36,7 @@ export function DesembolsoPage() {
   const navegar = useNavigate();
   const enviando = useRef(false);
 
-  if (consulta.isPending) return <Cargando />;
+  if (consulta.isPending) return <EsqueletoDetalle />;
   if (consulta.isError) return <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />;
   const c = consulta.data;
   const disponible = puedeEjecutar(c.estado, 'desembolsar');
@@ -100,8 +100,8 @@ export function DesembolsoPage() {
             <DatoLectura etiqueta={t('campo.nombreCompleto')} valor={c.nombreCompleto} />
           </GrupoDatos>
           <GrupoDatos titulo={t('desembolso.condiciones')}>
-            <DatoLectura etiqueta={t('campo.monto')} valor={formatearDinero(c.monto, locale)} mono />
-            <DatoLectura etiqueta={t('campo.tasa')} valor={formatearTasa(c.tasaAnual, locale)} mono />
+            <DatoLectura etiqueta={t('campo.monto')} valor={formatearDinero(c.monto, locale)} />
+            <DatoLectura etiqueta={t('campo.tasa')} valor={formatearTasa(c.tasaAnual, locale)} />
             <DatoLectura etiqueta={t('campo.periodicidad')} valor={t(`periodicidad.${c.periodicidad}`)} />
             <DatoLectura etiqueta={t('campo.plazo')} valor={textoPlazo(c.plazo, c.periodicidad, t)} />
           </GrupoDatos>
@@ -128,7 +128,7 @@ export function DesembolsoPage() {
                   value={cuenta} onChange={(e) => { setCuenta(e.target.value); setErrores((x) => ({ ...x, cuenta: undefined })); }} />
               </Field>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end max-sm:grid">
               <Button onClick={pedir}><Icono nombre="banco" />{t('desembolso.procesar')}</Button>
             </div>
           </div>

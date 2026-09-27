@@ -8,6 +8,7 @@ import { BadgeEstado } from './Badge';
 import { Button } from './Button';
 import { Field, Input } from './Campos';
 import { ConfirmDialog } from './ConfirmDialog';
+import { EsqueletoDetalle, EsqueletoTabla } from './Esqueleto';
 import { Paginador } from './Paginador';
 import { useToast } from './Toast';
 
@@ -103,5 +104,15 @@ describe('componentes', () => {
     }
     renderizar(<Lista />, { usuario: { id: 1, username: 'cajero', rol: 'CAJERO' as never } });
     expect(await screen.findByText('BAC Credomatic')).toBeInTheDocument();
+  });
+
+  it('los esqueletos anuncian la carga sin leer los bloques decorativos', () => {
+    renderizar(<><EsqueletoTabla /><EsqueletoDetalle /></>);
+    const estados = screen.getAllByRole('status');
+    expect(estados).toHaveLength(2);
+    for (const estado of estados) {
+      expect(estado).toHaveAttribute('aria-busy', 'true');
+      expect(estado).toHaveTextContent('Cargando…');
+    }
   });
 });

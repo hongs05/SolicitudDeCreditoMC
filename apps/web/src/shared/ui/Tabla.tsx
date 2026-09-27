@@ -7,7 +7,7 @@ export interface Columna<T> {
   titulo: string;
   celda(fila: T): ReactNode;
   derecha?: boolean;
-  /** Cifras en fuente monoespaciada (dinero, números de crédito). */
+  /** Identificadores (número de crédito, cédula) en monoespaciada. Las cifras usan números tabulares. */
   mono?: boolean;
   /** Se oculta en pantallas angostas para que la tabla quepa. */
   secundaria?: boolean;
@@ -37,7 +37,7 @@ export function Tabla<T>({ columnas, filas, claveFila, onFila, vacio, claseFila,
           <tr>
             {columnas.map((c) => (
               <th key={c.clave} scope="col"
-                className={`border-b border-line bg-surface-2 px-3.5 py-2.5 text-[11px] font-semibold tracking-[0.08em] whitespace-nowrap text-muted uppercase ${c.derecha ? 'text-right' : 'text-left'} ${c.secundaria ? 'max-sm:hidden' : ''}`}>
+                className={`border-b border-line bg-surface-2 px-3.5 py-2.5 text-xs font-semibold whitespace-nowrap text-muted ${c.derecha ? 'text-right' : 'text-left'} ${c.secundaria ? 'max-sm:hidden' : ''}`}>
                 {c.titulo}
               </th>
             ))}

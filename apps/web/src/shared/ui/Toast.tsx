@@ -44,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={a.id}
             role={a.tipo === 'error' ? 'alert' : 'status'}
-            className="anim-toast flex items-start gap-2.5 rounded-[14px] border border-line bg-surface px-3.5 py-3 text-ink shadow-card"
+            className="anim-toast flex items-start gap-2.5 rounded-[14px] bg-surface px-3.5 py-3 text-ink shadow-float"
           >
             <span aria-hidden="true" className={`mt-0.5 grid size-4.5 shrink-0 place-items-center rounded text-surface ${COLOR[a.tipo]}`}>
               <Icono nombre={ICONO[a.tipo]} className="size-3" />

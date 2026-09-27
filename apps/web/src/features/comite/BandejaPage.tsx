@@ -6,7 +6,7 @@ import type { SolicitudResumen } from '../../shared/api/tipos';
 import { diasDesde, formatearDinero, formatearInstante, formatearRelativo, numeroSolicitud, textoPlazo } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
 import { claseBoton } from '../../shared/ui/Button';
-import { Cargando } from '../../shared/ui/Cargando';
+import { EsqueletoTabla } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Paginador } from '../../shared/ui/Paginador';
@@ -46,7 +46,7 @@ export function BandejaPage() {
         </div>
       ),
     },
-    { clave: 'monto', titulo: t('campo.montoSolicitado'), celda: (s) => formatearDinero(s.montoSolicitado, locale), derecha: true, mono: true },
+    { clave: 'monto', titulo: t('campo.montoSolicitado'), celda: (s) => formatearDinero(s.montoSolicitado, locale), derecha: true },
     { clave: 'plazo', titulo: t('campo.plazo'), celda: (s) => <span className="text-muted">{textoPlazo(s.cantidadCuotas, s.periodicidad, t)}</span>, secundaria: true },
     { clave: 'espera', titulo: t('comite.enEspera'), celda: (s) => <span title={formatearInstante(s.creadaEn, locale)}>{espera(s.creadaEn)}</span>, secundaria: true },
     { clave: 'ir', titulo: '', derecha: true, secundaria: true, celda: (s) => <Link to={`/comite/${s.id}`} className={claseBoton('secundario', 'sm')}>{t('detalle.dictaminar')}</Link> },
@@ -60,7 +60,7 @@ export function BandejaPage() {
     <>
       <Encabezado titulo={t('comite.titulo')} subtitulo={subtitulo} />
       <section className="min-w-0 rounded-[14px] border border-line bg-surface">
-        {consulta.isPending ? <Cargando /> : consulta.isError ? (
+        {consulta.isPending ? <EsqueletoTabla columnas={5} /> : consulta.isError ? (
           <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
         ) : (
           <>

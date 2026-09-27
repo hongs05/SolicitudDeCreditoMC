@@ -198,6 +198,31 @@ No escribas código hasta que la especificación esté aprobada.
 - Se retiraron del repositorio las skills locales de Claude Code, ajenas a la solución.
 
 **Validación del autor:** pruebas del dominio con cobertura, pruebas unitarias, de integración y e2e de la API, pruebas del frontend, lint, verificación de tipos, build y recorrido en el navegador sobre `docker compose`.
+### 3.9 Pulido del diseño con la skill Impeccable
+
+- **Fecha:** 2026-09-27
+- **Herramienta:** Claude Code con la skill Impeccable (`pbakaus/impeccable`), instalada solo en local porque `.claude/` está ignorado
+- **Objetivo:** auditar el frontend con los criterios de la skill y pulirlo sin cambiar su identidad visual.
+
+**Instrucciones dadas a la herramienta**
+
+- Instalar Impeccable, auditar la interfaz y aplicar las mejoras en una rama aparte, con capturas del antes y el después.
+
+**Resultados**
+
+- Auditoría de 15/20 en modo "Operate" (interfaz de producto). Hallazgos principales: monoespaciada usada como adorno en cifras y fechas, etiquetas en versalitas espaciadas, patrones decorativos y áreas táctiles pequeñas en móvil.
+- Monoespaciada solo para identificadores (cédula, número de crédito, cuenta); cifras, fechas y porcentajes en la fuente del texto con números tabulares.
+- Títulos de grupo, encabezados de tabla y grupos del menú como títulos en minúsculas, sin versalitas espaciadas.
+- Se retiraron la numeración 01 / 02 / 03 del formulario, la franja rayada del plan de pagos, y la onda y las cifras decorativas del login, que ahora muestra los tres pasos reales del proceso.
+- Esqueletos con la forma del contenido en lugar de un indicador de carga en medio de la pantalla.
+- Áreas táctiles de al menos 44 px en móvil y acciones a todo el ancho en pantallas angostas.
+- Selección de texto, cursor, barras de desplazamiento y controles nativos con los colores del tema.
+- Movimiento reducido con alternativa propia (fundido corto) en lugar de anular todas las animaciones.
+- Diálogos y avisos con una sola elevación: sombra, sin borde.
+
+**Qué se descartó:** el lanzador de la skill descarga y ejecuta un binario precompilado; no se ejecutó y el contexto se leyó directamente del proyecto, como prevé la propia skill.
+
+**Validación del autor:** pruebas del frontend, lint, verificación de tipos y capturas del antes y el después en escritorio, móvil y modo oscuro.
 
 ---
 

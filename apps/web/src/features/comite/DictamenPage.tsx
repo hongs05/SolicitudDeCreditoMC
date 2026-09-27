@@ -9,9 +9,9 @@ import { avisarError } from '../../shared/ui/avisarError';
 import { BadgeEstado } from '../../shared/ui/Badge';
 import { Button, claseBoton } from '../../shared/ui/Button';
 import { Field, TextArea } from '../../shared/ui/Campos';
-import { Cargando } from '../../shared/ui/Cargando';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { DatoLectura, GrupoDatos } from '../../shared/ui/DatoLectura';
+import { EsqueletoDetalle } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { useToast } from '../../shared/ui/Toast';
@@ -32,7 +32,7 @@ export function DictamenPage() {
   const [conflicto, setConflicto] = useState<string | null>(null);
   const enviando = useRef(false);
 
-  if (consulta.isPending) return <Cargando />;
+  if (consulta.isPending) return <EsqueletoDetalle />;
   if (consulta.isError) return <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />;
   const s = consulta.data;
   const activa = puedeEjecutar(s.estado, 'aprobar');
@@ -87,7 +87,7 @@ export function DictamenPage() {
             <DatoLectura etiqueta={t('campo.edad')} valor={s.edad} />
           </GrupoDatos>
           <GrupoDatos titulo={t('comite.credito')}>
-            <DatoLectura etiqueta={t('campo.montoSolicitado')} valor={formatearDinero(s.montoSolicitado, locale)} mono />
+            <DatoLectura etiqueta={t('campo.montoSolicitado')} valor={formatearDinero(s.montoSolicitado, locale)} />
             <DatoLectura etiqueta={t('campo.cantidadCuotas')} valor={s.cantidadCuotas} />
             <DatoLectura etiqueta={t('campo.periodicidad')} valor={t(`periodicidad.${s.periodicidad}`)} />
             <DatoLectura etiqueta={t('campo.plazo')} valor={plazo} />
@@ -96,11 +96,11 @@ export function DictamenPage() {
         {activa ? (
           <div className="grid gap-3.5 rounded-b-[14px] border-t border-line bg-surface-2 p-5">
             <Field id="observaciones" etiqueta={t('campo.observaciones')} error={error}
-              ayuda={<span className="text-right font-mono text-[11.5px] text-muted">{observaciones.length} / {MAX_OBSERVACIONES}</span>}>
+              ayuda={<span className="text-right text-xs text-muted tabular-nums">{observaciones.length} / {MAX_OBSERVACIONES}</span>}>
               <TextArea rows={4} maxLength={MAX_OBSERVACIONES} value={observaciones} className="bg-surface"
                 onChange={(e) => { setObservaciones(e.target.value); if (e.target.value.trim()) setError(undefined); }} />
             </Field>
-            <div className="flex flex-wrap items-center justify-end gap-2.5">
+            <div className="flex flex-wrap items-center justify-end gap-2.5 max-sm:grid">
               {!hayObservaciones && <span className="mr-auto text-[12.5px] text-muted">{t('comite.pista')}</span>}
               {/* aria-disabled en lugar de disabled: el clic sigue llegando para explicar qué falta. */}
               <Button variante="secundario" aria-disabled={!hayObservaciones} onClick={() => pedir('rechazar')}>{t('comite.rechazar')}</Button>
@@ -122,7 +122,7 @@ export function DictamenPage() {
             </div>
             {s.observaciones && (
               <div>
-                <span className="text-[11px] font-semibold tracking-[0.1em] text-muted uppercase">{t('campo.observaciones')}</span>
+                <h2 className="text-sm font-bold text-ink">{t('campo.observaciones')}</h2>
                 <p className="mt-1 [overflow-wrap:anywhere]">{s.observaciones}</p>
               </div>
             )}

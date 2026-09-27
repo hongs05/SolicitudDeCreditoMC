@@ -10,7 +10,7 @@ export function PaginaError({ codigo, icono, tono = 'neutro', titulo, texto, acc
   return (
     <section className="rounded-[14px] border border-line bg-surface">
       <div className="grid justify-items-center gap-3 px-5 py-14 text-center">
-        <div aria-hidden="true" className={`relative font-mono text-6xl font-medium tracking-tight ${color}`}>
+        <div aria-hidden="true" className={`relative text-6xl font-extrabold tracking-[-0.03em] tabular-nums ${color}`}>
           {codigo}
           <span className="absolute -right-5 -bottom-1 grid size-8 place-items-center rounded-lg border border-line bg-surface">
             <Icono nombre={icono} />

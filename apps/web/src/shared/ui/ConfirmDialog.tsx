@@ -72,7 +72,7 @@ export function ConfirmDialog(p: ConfirmDialogProps) {
         aria-labelledby={tituloId}
         aria-describedby={mensajeId}
         onKeyDown={manejarTecla}
-        className="anim-dialogo grid w-full max-w-110 gap-3.5 rounded-[18px] border border-line bg-surface p-5.5 shadow-float"
+        className="anim-dialogo grid w-full max-w-110 gap-3.5 rounded-2xl bg-surface p-5.5 shadow-float"
       >
         <div className="flex items-center gap-3">
           {icono}
@@ -80,7 +80,7 @@ export function ConfirmDialog(p: ConfirmDialogProps) {
         </div>
         <p id={mensajeId} className="text-muted">{p.mensaje}</p>
         {p.cita && <p className="rounded-[10px] bg-maize-soft px-3 py-2.5 text-[13px] text-ink [overflow-wrap:anywhere]">{p.cita}</p>}
-        <div className="mt-1 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-1 flex flex-wrap justify-end gap-2.5 max-sm:grid">
           <Button ref={cancelarRef} variante="secundario" onClick={p.onCancelar} disabled={p.cargando}>{p.etiquetaCancelar ?? t('comun.cancelar')}</Button>
           <Button ref={confirmarRef} variante={p.variante ?? 'primario'} onClick={p.onConfirmar} cargando={p.cargando}>{p.etiquetaConfirmar}</Button>
         </div>
