@@ -77,6 +77,21 @@ describe('manejo de errores', () => {
     expect(r.body.details).toEqual([{ field: 'monto', code: 'VALOR_MINIMO', message: 'El valor mínimo es 0.01' }]);
   });
 
+  it('rechaza un monto con más de 12 dígitos enteros', async () => {
+    const r = await app.agente()
+      .post('/api/v1/prueba/validacion')
+      .send({ nombre: 'abc', monto: '1000000000000' })
+      .expect(400);
+    expect(r.body.details).toEqual([expect.objectContaining({ field: 'monto', code: 'FORMATO_INVALIDO' })]);
+  });
+
+  it('acepta el monto máximo de 12 dígitos enteros', async () => {
+    await app.agente()
+      .post('/api/v1/prueba/validacion')
+      .send({ nombre: 'abc', monto: '999999999999.99' })
+      .expect(200);
+  });
+
   it('un JSON malformado responde 400 y no 500', async () => {
     const r = await app.agente()
       .post('/api/v1/prueba/validacion')

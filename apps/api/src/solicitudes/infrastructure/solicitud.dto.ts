@@ -1,21 +1,24 @@
 import { type DatosSolicitud, EstadoSolicitud, Periodicidad } from '@credito/domain';
+import { Transform } from 'class-transformer';
 import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { PaginacionDto } from '../../shared/infrastructure/http/paginacion.dto';
 import {
   DecimalMaximo, DecimalMinimo, EsDecimal, EsFechaPasada, Longitud, Maximo, Minimo,
 } from '../../shared/infrastructure/validation/decoradores';
 
+const recortar = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
+
 export class CrearSolicitudDto {
-  @IsNotEmpty() @IsString() @Longitud(3, 120)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(3, 120)
   nombreCompleto!: string;
 
-  @IsNotEmpty() @IsString() @Longitud(5, 30) @Matches(/^\S+$/)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(5, 30) @Matches(/^\S+$/)
   cedula!: string;
 
-  @IsNotEmpty() @IsEmail()
+  @Transform(recortar) @IsNotEmpty() @IsEmail()
   correo!: string;
 
-  @IsNotEmpty() @IsString() @Longitud(7, 20)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(7, 20)
   telefono!: string;
 
   @IsNotEmpty() @EsFechaPasada()
@@ -24,7 +27,7 @@ export class CrearSolicitudDto {
   @IsInt() @Minimo(1)
   tipoEmpleoId!: number;
 
-  @IsNotEmpty() @IsString() @Longitud(2, 120)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(2, 120)
   empresa!: string;
 
   @IsInt() @Minimo(0) @Maximo(60)
@@ -47,26 +50,28 @@ export class CrearSolicitudDto {
 }
 
 export class DictamenDto {
-  @IsNotEmpty() @IsString() @Longitud(1, 1000)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(1, 1000)
   observaciones!: string;
 }
 
+const vacioAIndefinido = ({ value }: { value: unknown }): unknown => (value === '' ? undefined : value);
+
 export class FiltrosSolicitudesDto extends PaginacionDto {
-  @IsOptional() @IsEnum(EstadoSolicitud)
+  @Transform(vacioAIndefinido) @IsOptional() @IsEnum(EstadoSolicitud)
   estado?: EstadoSolicitud;
 
-  @IsOptional() @IsString()
+  @Transform(vacioAIndefinido) @IsOptional() @IsString()
   cedula?: string;
 }
 
 export const aDatosSolicitud = (dto: CrearSolicitudDto): DatosSolicitud => ({
-  nombreCompleto: dto.nombreCompleto.trim(),
+  nombreCompleto: dto.nombreCompleto,
   cedula: dto.cedula,
   correo: dto.correo,
   telefono: dto.telefono,
   fechaNacimiento: dto.fechaNacimiento,
   tipoEmpleoId: dto.tipoEmpleoId,
-  empresa: dto.empresa.trim(),
+  empresa: dto.empresa,
   antiguedadAnios: dto.antiguedadAnios,
   ingresoMensual: Number(dto.ingresoMensual),
   montoSolicitado: Number(dto.montoSolicitado),

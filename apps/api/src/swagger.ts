@@ -9,6 +9,7 @@ export function configurarSwagger(app: INestApplication): void {
     .setVersion('1.0')
     .addBearerAuth()
     .addCookieAuth(NOMBRE_COOKIE_REFRESH)
+    .addSecurityRequirements('bearer')
     .build();
   const documento = SwaggerModule.createDocument(app, configuracion);
   SwaggerModule.setup('api/docs', app, documento);

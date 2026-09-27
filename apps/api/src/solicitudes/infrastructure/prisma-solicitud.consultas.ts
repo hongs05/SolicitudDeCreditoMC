@@ -1,4 +1,4 @@
-import { esEstadoSolicitud, esPeriodicidad, esRol } from '@credito/domain';
+import { esEstadoSolicitud, esPeriodicidad, esRol, type Rol } from '@credito/domain';
 import { Prisma, type PrismaClient } from '@prisma/client';
 import type { Paginado } from '../../shared/application/vistas';
 import { aNumero } from '../../shared/infrastructure/prisma/decimal';
@@ -12,12 +12,16 @@ const INCLUIR = {
 
 type SolicitudConRelaciones = Prisma.SolicitudGetPayload<{ include: typeof INCLUIR }>;
 
+function comoRol(rol: string, usuarioId: number): Rol {
+  if (!esRol(rol)) throw new Error(`Usuario ${usuarioId} con rol inválido`);
+  return rol;
+}
+
 function aVista(f: SolicitudConRelaciones): SolicitudVista {
   if (!esEstadoSolicitud(f.estado) || !esPeriodicidad(f.periodicidad)) {
     throw new Error(`Solicitud ${f.id} con datos inválidos`);
   }
   const d = f.dictaminadaPor;
-  if (d && !esRol(d.rol)) throw new Error(`Usuario ${d.id} con rol inválido`);
   return {
     id: f.id,
     estado: f.estado,
@@ -35,7 +39,7 @@ function aVista(f: SolicitudConRelaciones): SolicitudVista {
     tasaAnual: aNumero(f.tasaAnual),
     periodicidad: f.periodicidad,
     observaciones: f.observaciones,
-    dictaminadaPor: d ? { id: d.id, username: d.username, rol: d.rol as never } : null,
+    dictaminadaPor: d ? { id: d.id, username: d.username, rol: comoRol(d.rol, d.id) } : null,
     dictaminadaEn: f.dictaminadaEn,
     creditoId: f.credito?.id ?? null,
     creadaEn: f.creadaEn,

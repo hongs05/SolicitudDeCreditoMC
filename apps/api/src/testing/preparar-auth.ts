@@ -10,6 +10,7 @@ export function prepararAuth() {
   const secretos = new SecretosFalsos();
   const tokens = new TokenIssuerFalso();
   const opciones = { refreshTtlDias: 7 };
-  const login = new Login(uow, new HasherFalso(), tokens, secretos, opciones, reloj);
-  return { uow, reloj, secretos, tokens, opciones, login };
+  const hasher = new HasherFalso();
+  const login = new Login(uow, hasher, tokens, secretos, opciones, reloj);
+  return { uow, reloj, secretos, tokens, opciones, hasher, login };
 }

@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, NotFoundException, PayloadTooLargeException, UnauthorizedException } from '@nestjs/common';
 import { NoEncontradoError } from '@credito/domain';
+import { Prisma } from '@prisma/client';
 import { describe, expect, it } from 'vitest';
 import { ValidacionException } from '../validation/validacion.exception';
 import { clasificar } from './error-handler.filter';
@@ -26,6 +27,11 @@ describe('clasificar', () => {
     [new PayloadTooLargeException(), 413, 'VALIDACION', {}],
   ])('mapea %o', (excepcion, statusCode, code, params) => {
     expect(clasificar(excepcion)).toEqual({ statusCode, code, params });
+  });
+
+  it('una violación de unicidad de Prisma (P2002) es 409 CONFLICTO', () => {
+    const excepcion = new Prisma.PrismaClientKnownRequestError('dup', { code: 'P2002', clientVersion: 'x' });
+    expect(clasificar(excepcion)).toEqual({ statusCode: 409, code: 'CONFLICTO', params: {} });
   });
 
   it('todo lo demás es 500 ERROR_INTERNO', () => {
