@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: file:/app/data/credito.db
+      JWT_SECRET: ${JWT_SECRET:-secreto-de-demo-no-usar-en-produccion-0001}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      REFRESH_TTL_DAYS: ${REFRESH_TTL_DAYS:-7}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      APP_TZ: ${APP_TZ:-America/Managua}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/v1/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
