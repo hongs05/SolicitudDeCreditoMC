@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                      Int            @id @default(autoincrement())
+  username                String         @unique
+  passwordHash            String
+  rol                     String
+  creadoEn                DateTime       @default(now())
+  refreshTokens           RefreshToken[]
+  solicitudesCreadas      Solicitud[]    @relation("SolicitudCreadaPor")
+  solicitudesDictaminadas Solicitud[]    @relation("SolicitudDictaminadaPor")
+  desembolsos             Desembolso[]
+}
+
+model RefreshToken {
+  id               Int           @id @default(autoincrement())
+  usuarioId        Int
+  familiaId        String
+  tokenHash        String        @unique
+  expiraEn         DateTime
+  creadoEn         DateTime      @default(now())
+  revocadoEn       DateTime?
+  reemplazadoPorId Int?          @unique
+  usuario          Usuario       @relation(fields: [usuarioId], references: [id])
+  reemplazadoPor   RefreshToken? @relation("Rotacion", fields: [reemplazadoPorId], references: [id])
+  reemplaza        RefreshToken? @relation("Rotacion")
+
+  @@index([familiaId])
+}
+
+model TipoEmpleo {
+  id          Int         @id @default(autoincrement())
+  codigo      String      @unique
+  nombre      String
+  solicitudes Solicitud[]
+}
+
+model Banco {
+  id          Int          @id @default(autoincrement())
+  codigo      String       @unique
+  nombre      String
+  activo      Boolean      @default(true)
+  desembolsos Desembolso[]
+}
+
+model Solicitud {
+  id               Int        @id @default(autoincrement())
+  estado           String
+  nombreCompleto   String
+  cedula           String
+  correo           String
+  telefono         String
+  fechaNacimiento  String
+  tipoEmpleoId     Int
+  empresa          String
+  antiguedadAnios  Int
+  ingresoMensual   Decimal
+  montoSolicitado  Decimal
+  cantidadCuotas   Int
+  tasaAnual        Decimal
+  periodicidad     String
+  observaciones    String?
+  dictaminadaPorId Int?
+  dictaminadaEn    DateTime?
+  creadaPorId      Int
+  creadaEn         DateTime   @default(now())
+  actualizadaEn    DateTime   @updatedAt
+  tipoEmpleo       TipoEmpleo @relation(fields: [tipoEmpleoId], references: [id])
+  dictaminadaPor   Usuario?   @relation("SolicitudDictaminadaPor", fields: [dictaminadaPorId], references: [id])
+  creadaPor        Usuario    @relation("SolicitudCreadaPor", fields: [creadaPorId], references: [id])
+  credito          Credito?
+
+  @@index([estado])
+  @@index([cedula])
+}
+
+model Credito {
+  id            Int         @id @default(autoincrement())
+  secuencia     Int         @unique
+  numero        String      @unique
+  solicitudId   Int         @unique
+  monto         Decimal
+  tasaAnual     Decimal
+  periodicidad  String
+  plazo         Int
+  cuotaNivelada Decimal
+  fechaBase     String
+  creadoEn      DateTime    @default(now())
+  solicitud     Solicitud   @relation(fields: [solicitudId], references: [id])
+  cuotas        Cuota[]
+  desembolso    Desembolso?
+}
+
+model Cuota {
+  id               Int     @id @default(autoincrement())
+  creditoId        Int
+  numero           Int
+  fechaVencimiento String
+  capital          Decimal
+  interes          Decimal
+  valorCuota       Decimal
+  saldoRestante    Decimal
+  credito          Credito @relation(fields: [creditoId], references: [id])
+
+  @@unique([creditoId, numero])
+}
+
+model Desembolso {
+  id             Int      @id @default(autoincrement())
+  creditoId      Int      @unique
+  bancoId        Int
+  numeroCuenta   String
+  ejecutadoPorId Int
+  ejecutadoEn    DateTime
+  credito        Credito  @relation(fields: [creditoId], references: [id])
+  banco          Banco    @relation(fields: [bancoId], references: [id])
+  ejecutadoPor   Usuario  @relation(fields: [ejecutadoPorId], references: [id])
+}

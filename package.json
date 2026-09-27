@@ -1,0 +1,27 @@
+{
+  "name": "solicitud-credito",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "npm run build -w @credito/domain && npm run build -w @credito/api && npm run build -w @credito/web",
+    "dev": "npm run build -w @credito/domain && concurrently -n domain,api,web -c blue,green,magenta \"npm run dev -w @credito/domain\" \"npm run dev -w @credito/api\" \"npm run dev -w @credito/web\"",
+    "test": "npm run test --workspaces --if-present",
+    "test:int": "npm run test:int -w @credito/api",
+    "test:e2e": "npm run test:e2e -w @credito/api",
+    "test:all": "npm test && npm run test:int && npm run test:e2e",
+    "lint": "eslint .",
+    "db:migrate": "npm run db:migrate -w @credito/api",
+    "db:seed": "npm run build -w @credito/domain && npm run build -w @credito/api && npm run db:seed -w @credito/api"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.17.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-boundaries": "^5.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^3.2.0"
+  }
+}

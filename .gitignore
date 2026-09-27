@@ -1,0 +1,19 @@
+# Enunciado original; la versión versionada es docs/prueba-tecnica.md
+*.docx
+
+# Dependencias y compilados
+node_modules/
+dist/
+coverage/
+
+# Base de datos SQLite local
+data/*.db
+data/*.db-journal
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+
+# Entorno
+.env
+
+# Sistema
+.DS_Store
