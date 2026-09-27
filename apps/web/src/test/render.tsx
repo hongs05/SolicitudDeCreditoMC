@@ -18,7 +18,12 @@ export function renderizar(ui: ReactElement, opciones: { ruta?: string; usuario?
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <AuthProvider>
-            <MemoryRouter initialEntries={[opciones.ruta ?? '/']}>{children}</MemoryRouter>
+            <MemoryRouter
+          initialEntries={[opciones.ruta ?? '/']}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          {children}
+        </MemoryRouter>
           </AuthProvider>
         </ToastProvider>
       </QueryClientProvider>
