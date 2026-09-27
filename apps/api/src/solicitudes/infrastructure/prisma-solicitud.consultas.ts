@@ -51,12 +51,13 @@ export class PrismaSolicitudConsultas implements SolicitudConsultas {
 
   async listar(f: FiltrosSolicitudes): Promise<Paginado<SolicitudVista>> {
     const where: Prisma.SolicitudWhereInput = { estado: f.estado, cedula: f.cedula };
+    const orden = f.orden ?? 'desc';
     const [total, filas] = await this.prisma.$transaction([
       this.prisma.solicitud.count({ where }),
       this.prisma.solicitud.findMany({
         where,
         include: INCLUIR,
-        orderBy: [{ creadaEn: 'desc' }, { id: 'desc' }],
+        orderBy: [{ creadaEn: orden }, { id: orden }],
         skip: (f.page - 1) * f.pageSize,
         take: f.pageSize,
       }),

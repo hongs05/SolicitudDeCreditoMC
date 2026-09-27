@@ -61,19 +61,24 @@ export function ConsultaPage() {
   const { t, locale } = useT();
   const [parametros, setParametros] = useSearchParams();
   const cedula = parametros.get('cedula') ?? '';
-  const creditoInicial = Number(parametros.get('credito')) || null;
+  const elegido = Number(parametros.get('credito')) || null;
   const [texto, setTexto] = useState(cedula);
-  const [elegido, setElegido] = useState<number | null>(creditoInicial);
+  // Si la URL cambia sin desmontar la página (Atrás, el menú lateral), el campo vuelve a mostrar la cédula buscada.
+  const [cedulaMostrada, setCedulaMostrada] = useState(cedula);
+  if (cedulaMostrada !== cedula) {
+    setCedulaMostrada(cedula);
+    setTexto(cedula);
+  }
   const consulta = useCreditosPorCedula(cedula);
   const creditos = consulta.data?.items ?? [];
   const seleccionado = creditos.length === 1 ? creditos[0] : creditos.find((c) => c.id === elegido);
 
-  // La cédula buscada vive en la URL: el enlace desde el expediente llega con ella y el botón Atrás la conserva.
+  // La cédula buscada y el crédito elegido viven en la URL: el enlace desde el expediente llega con ellos y Atrás los conserva.
   const buscar = (evento: FormEvent) => {
     evento.preventDefault();
-    setElegido(null);
     setParametros(texto.trim() ? { cedula: texto.trim() } : {});
   };
+  const elegir = (id: number) => setParametros({ cedula, credito: String(id) }, { replace: true });
 
   return (
     <>
@@ -101,7 +106,7 @@ export function ConsultaPage() {
           <ul className="grid gap-2">
             {creditos.map((c) => (
               <li key={c.id}>
-                <button type="button" onClick={() => setElegido(c.id)} aria-pressed={c.id === seleccionado?.id}
+                <button type="button" onClick={() => elegir(c.id)} aria-pressed={c.id === seleccionado?.id}
                   className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 rounded-[10px] border border-line bg-surface px-3.5 py-3 text-left text-ink transition hover:border-accent active:scale-[0.99] aria-pressed:border-accent aria-pressed:bg-accent-soft">
                   <span className="font-mono">{c.numero}</span>
                   <span>{formatearDinero(c.monto, locale)} · {textoPlazo(c.plazo, c.periodicidad, t)}</span>

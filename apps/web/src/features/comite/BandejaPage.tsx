@@ -20,11 +20,13 @@ export function BandejaPage() {
   const { t, locale } = useT();
   const navegar = useNavigate();
   const [page, setPage] = useState(1);
-  const consulta = useSolicitudes({ estado: EstadoSolicitud.PENDIENTE, page });
-  // El comité atiende por orden de llegada: la API ordena de la más nueva a la más vieja, aquí se invierte.
-  const filas = [...(consulta.data?.items ?? [])].reverse();
+  // El comité atiende por orden de llegada: la API pagina de la más vieja a la más nueva.
+  const consulta = useSolicitudes({ estado: EstadoSolicitud.PENDIENTE, orden: 'asc', page });
+  // La más antigua de toda la bandeja, no solo de la página actual.
+  const primera = useSolicitudes({ estado: EstadoSolicitud.PENDIENTE, orden: 'asc', page: 1, pageSize: 1 });
+  const filas = consulta.data?.items ?? [];
   const total = consulta.data?.total ?? 0;
-  const masAntigua = filas[0];
+  const masAntigua = primera.data?.items[0];
 
   const espera = (iso: string) => {
     const dias = diasDesde(iso);

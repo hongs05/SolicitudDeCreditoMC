@@ -9,6 +9,8 @@ export interface FiltrosSolicitudes {
   cedula?: string;
   page: number;
   pageSize?: number;
+  /** Por fecha de registro; la API usa `desc` si no se indica. */
+  orden?: 'asc' | 'desc';
 }
 
 export const useSolicitudes = (f: FiltrosSolicitudes, habilitado = true) =>

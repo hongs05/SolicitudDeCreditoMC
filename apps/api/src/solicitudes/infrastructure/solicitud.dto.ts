@@ -1,6 +1,6 @@
 import { type DatosSolicitud, EstadoSolicitud, Periodicidad } from '@credito/domain';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { PaginacionDto } from '../../shared/infrastructure/http/paginacion.dto';
 import {
   DecimalMaximo, DecimalMinimo, EsDecimal, EsFechaPasada, Longitud, Maximo, Minimo,
@@ -62,6 +62,10 @@ export class FiltrosSolicitudesDto extends PaginacionDto {
 
   @Transform(vacioAIndefinido) @IsOptional() @IsString()
   cedula?: string;
+
+  /** Por fecha de registro. `asc` sirve a la bandeja del comité, que atiende por orden de llegada. */
+  @Transform(vacioAIndefinido) @IsOptional() @IsIn(['asc', 'desc'])
+  orden?: 'asc' | 'desc';
 }
 
 export const aDatosSolicitud = (dto: CrearSolicitudDto): DatosSolicitud => ({
