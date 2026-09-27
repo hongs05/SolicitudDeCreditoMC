@@ -20,11 +20,7 @@ docker compose up --build
 
 La base de datos SQLite queda en `data/credito.db`. Las migraciones y los datos de demostración se aplican solos al arrancar.
 
-**En Linux,** si la API no puede escribir en `data/`, el uid del usuario no es 1000. Dar permisos a la carpeta y volver a levantar:
-
-```bash
-chmod 777 data
-```
+En Linux no hace falta dar permisos a `data/`: el contenedor se adueña de la carpeta al arrancar y luego ejecuta la API sin privilegios.
 
 ## Usuarios de demostración
 
@@ -41,11 +37,12 @@ Cualquier usuario autenticado puede consultar solicitudes, créditos y planes de
 
 ## Recorrido guiado
 
-1. Entrar como `oficial` y registrar una solicitud con monto 10 000, 12 cuotas, tasa 12 % y periodicidad mensual. El panel lateral muestra la cuota de C$ 888.49 antes de enviar.
-2. Entrar como `analista`, abrir la solicitud en **Comité**, escribir observaciones y aprobarla. Se crea el crédito `CR-000001` con sus 12 cuotas.
-3. Entrar como `cajero`, abrir el crédito en **Desembolsos**, elegir el banco y la cuenta, y procesar. El estado pasa a DESEMBOLSADA y se muestra el plan.
-4. En **Plan de pagos**, buscar la cédula para ver el plan desde cualquier rol.
-5. Para comprobar la regla principal, intentar desembolsar una solicitud que no está aprobada por la API:
+1. Entrar como `oficial` y registrar una solicitud con monto 10 000, 12 cuotas, tasa 12 % y periodicidad mensual. El panel lateral muestra la cuota de C$ 888.49 antes de enviar. **Cargar datos de ejemplo** llena el formulario de una vez.
+2. Registrar otra solicitud con la misma cédula. El panel lo advierte mientras se escribe y, al registrar, un modal explica que ya hay una solicitud abierta y ofrece abrirla. La API responde `409 SOLICITUD_ABIERTA_EXISTENTE`.
+3. Entrar como `analista`, abrir la solicitud en **Comité**, escribir observaciones y aprobarla. Se crea el crédito `CR-000001` con sus 12 cuotas.
+4. Entrar como `cajero`, abrir el crédito en **Desembolsos**, elegir el banco y la cuenta, y procesar. El estado pasa a DESEMBOLSADA y se muestra el plan.
+5. En **Plan de pagos**, buscar la cédula para ver el plan desde cualquier rol.
+6. Para comprobar la regla principal por la API, intentar desembolsar otra vez el crédito del paso 4 (su id es `1` en una base nueva):
 
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
@@ -53,10 +50,10 @@ TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
   -d '{"username":"cajero","password":"Demo2026!"}' | sed -E 's/.*"accessToken":"([^"]+)".*/\1/')
 curl -s -X POST http://localhost:8080/api/v1/desembolsos \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"creditoId":999,"bancoId":1,"numeroCuenta":"1234567"}'
+  -d '{"creditoId":1,"bancoId":1,"numeroCuenta":"1234567"}'
 ```
 
-La respuesta es un 404, porque una solicitud no aprobada no tiene crédito. Con `-H 'Accept-Language: en'` el mensaje sale en inglés.
+La respuesta es `409 CREDITO_YA_DESEMBOLSADO`. Una solicitud pendiente o rechazada no tiene crédito, así que tampoco hay nada que desembolsar (`404`). Con `-H 'Accept-Language: en'` el mensaje sale en inglés.
 
 ## Desarrollo sin Docker
 
@@ -126,12 +123,16 @@ El diseño completo está en [docs/superpowers/specs/2026-09-24-solicitud-credit
 - **Periodicidad quincenal** usa `n = 24`, como indica el enunciado. Financieramente serían 26 quincenas al año.
 - **Tasa 0 %:** la cuota es monto entre cuotas, para evitar la división por cero de la fórmula.
 - **Observaciones** son obligatorias al aprobar y también al rechazar.
-- **Edad máxima:** se rechaza a quien tenga más de 80 años. Con 80 exactos se acepta.
+- **Edad:** se rechaza a quien tenga más de 80 años, como pide el enunciado; con 80 exactos se acepta. También se rechaza a los menores de 18, porque no pueden contratar un crédito.
+- **Una solicitud abierta por cédula:** mientras una cédula tenga una solicitud pendiente o aprobada sin desembolsar, no se registra otra (409 `SOLICITUD_ABIERTA_EXISTENTE`). Rechazada o desembolsada, el cliente puede volver a solicitar.
+- **Misma persona, misma fecha:** una cédula ya registrada debe traer la misma fecha de nacimiento (409 `CEDULA_FECHA_DISTINTA`); si no, es otra persona o un error de captura.
+- **Antigüedad laboral:** no puede superar los años transcurridos desde los 14, la edad mínima para trabajar en Nicaragua (422 `ANTIGUEDAD_INCONSISTENTE`).
+- **Formatos:** el nombre no admite dígitos y el teléfono solo dígitos, espacios, guiones, paréntesis y un `+` inicial. Los patrones están en el dominio, así el formulario y la API validan lo mismo.
 - **Comité:** muestra exactamente los siete campos que lista el enunciado, sin datos laborales.
 - **Moneda:** córdobas, con símbolo `C$`, porque los cuatro bancos operan en Nicaragua.
 - **Zona horaria:** las fechas del negocio, como la fecha base del plan y la edad, se calculan en `America/Managua`.
 - **Redondeo:** todo se calcula en centavos. La última cuota absorbe la diferencia para que el capital sume exactamente el monto.
-- **Plazo máximo:** se rechazan plazos mayores a 30 años, sin importar la periodicidad (422 `PARAMETROS_CREDITO_INVALIDOS`).
+- **Plazo máximo:** se rechazan plazos mayores a 30 años, sin importar la periodicidad (422 `PLAZO_MAXIMO_EXCEDIDO`).
 - **Combinaciones inválidas de tasa y plazo:** si la cuota nivelada resultante no alcanza a cubrir el interés del primer periodo, el crédito nunca se saldaría, así que se rechaza (422 `PARAMETROS_CREDITO_INVALIDOS`).
 
 ## Estructura del repositorio

@@ -26,8 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Permitir escritura del usuario node sobre data/
-        run: chmod 777 data
       - name: Levantar la solución
         run: docker compose up -d --build --wait
       - name: Health a través de nginx

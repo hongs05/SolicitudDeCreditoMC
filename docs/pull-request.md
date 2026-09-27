@@ -3,11 +3,13 @@
 ## Qué incluye
 
 - Login con JWT, refresh token rotativo en cookie `httpOnly` y cuatro roles.
-- Captura de solicitudes con cuota nivelada calculada en vivo y rechazo de mayores de 80 años.
+- Captura de solicitudes con cuota nivelada calculada en vivo, rechazo de mayores de 80 años y validaciones de negocio: una sola solicitud abierta por cédula, fecha de nacimiento coherente, edad mínima, antigüedad posible y plazo máximo.
 - Comité de riesgo en solo lectura con los siete campos del enunciado, observaciones obligatorias y botones Aprobar Crédito y Rechazar Crédito.
 - Aprobación atómica que crea el crédito `CR-000001` y todas sus cuotas de amortización.
 - Desembolso a LAFISE, FICOHSA, BAC Credomatic o Banpro, solo para créditos aprobados.
 - Extras: refresh token y consulta del plan de pagos por cédula.
+- Interfaz según el prototipo visual "Crédito MC", en modo claro y oscuro, con expediente de la solicitud, contadores de pendientes y calendario propio.
+- Errores que bloquean explicados en un modal, y errores de campo junto al campo.
 - Interfaz y mensajes de error en español e inglés.
 - Errores unificados con código estable y mensaje en español o inglés según `Accept-Language`.
 
@@ -21,6 +23,7 @@
 - **Refresh opaco en cookie.** Se guarda solo su hash, rota en cada uso y un reuso revoca toda la familia de tokens.
 - **Errores con código estable y mensaje traducido.** El dominio emite códigos. Un solo filtro los traduce según `Accept-Language`.
 - **Fechas del negocio en `America/Managua`.** Evita que una aprobación nocturna quede con fecha del día siguiente.
+- **Validaciones en el dominio.** Las reglas y los patrones de formato viven en `packages/domain`; el formulario los usa para avisar antes de enviar y la API para rechazar. No pueden divergir.
 
 ## Cumplimiento del enunciado
 
@@ -29,7 +32,8 @@
 | No desembolsar créditos no aprobados | `Solicitud.desembolsar()` en el dominio | `solicitud.spec.ts`, `desembolsar.use-case.spec.ts`, `desembolsos.e2e.spec.ts` |
 | Aprobación y cuotas atómicas | `AprobarSolicitud` sobre `PrismaUnitOfWork` | `aprobacion.int.spec.ts`, con fallo simulado a mitad de la inserción |
 | Cuota nivelada en el frontend | `PanelCuota` con `calcularCuotaNivelada` del dominio | `NuevaSolicitudPage.spec.tsx`, caso A = 888.49 |
-| Rechazo de mayores de 80 | `validarEdadMaxima` en dominio y formulario | `edad.spec.ts`, `solicitudes.e2e.spec.ts`, `NuevaSolicitudPage.spec.tsx` |
+| Rechazo de mayores de 80 | `validarEdad` en dominio y formulario | `edad.spec.ts`, `solicitudes.e2e.spec.ts`, `NuevaSolicitudPage.spec.tsx` |
+| Una solicitud abierta por cédula | `verificarHistorialCedula` dentro de la transacción de alta | `historial-cedula.spec.ts`, `solicitudes.e2e.spec.ts`, `NuevaSolicitudPage.spec.tsx` |
 | Observaciones obligatorias | `Solicitud.aprobar()` y `DictamenPage` | `solicitud.spec.ts`, `DictamenPage.spec.tsx` |
 | Número de crédito relacionado | `Credito.desde()` y columna `secuencia` | `aprobacion.int.spec.ts` |
 | Plan con tantas cuotas como el plazo | `generarPlanAmortizacion` | `plan-amortizacion.spec.ts`, con pruebas de propiedades |

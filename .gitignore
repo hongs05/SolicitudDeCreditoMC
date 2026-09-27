@@ -17,3 +17,7 @@ apps/api/prisma/*.db-journal
 
 # Sistema
 .DS_Store
+
+# Configuración local de Claude Code (skills, lanzadores); no forma parte de la entrega
+.claude/
+skills-lock.json

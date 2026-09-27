@@ -173,6 +173,34 @@ No escribas código hasta que la especificación esté aprobada.
 **Validación del autor:** pruebas del frontend, lint, verificación de tipos, build de producción y recorrido en el navegador con los cuatro roles, en escritorio, móvil y modo oscuro.
 ---
 
+### 3.8 Revisión final, validaciones de negocio y preparación de la entrega
+
+- **Fecha:** 2026-09-27
+- **Herramienta:** Claude Code
+- **Objetivo:** revisar el frontend contra el diseño, corregir los defectos encontrados, completar las validaciones pendientes y dejar el repositorio listo para entregar.
+
+**Instrucciones dadas a la herramienta**
+
+- Revisar el frontend y el estado del repositorio, y corregir los defectos encontrados.
+- Comparar pantalla por pantalla con el prototipo "Crédito MC" y aplicar las diferencias.
+- Dar estilo a los desplegables y al selector de fecha.
+- Validar cédulas repetidas, buscar otras validaciones pendientes y mostrar los errores con mensajes o modales.
+
+**Resultados**
+
+- Bandeja del comité por orden de llegada en todas las páginas: la API acepta `orden=asc|desc` en lugar de invertir cada página en el navegador.
+- La consulta del plan de pagos guarda la cédula y el crédito elegido en la URL y se mantiene sincronizada con Atrás y Adelante.
+- Tokens de color de la revisión de contraste del diseño, menú lateral claro y controles de formulario con los colores del tema.
+- Calendario propio para la fecha de nacimiento, con selector de mes y año y uso completo con teclado, porque el selector nativo no admite estilos.
+- Validaciones nuevas en el dominio, compartidas por la API y el formulario: una sola solicitud abierta por cédula, fecha de nacimiento coherente con solicitudes anteriores, edad mínima de 18 años, antigüedad laboral posible para la edad, plazo máximo con mensaje propio y formatos de nombre y teléfono.
+- Modales para los errores que bloquean: cédula con solicitud abierta, fecha de nacimiento distinta, y solicitudes o créditos procesados por otro usuario al mismo tiempo.
+- La imagen de la API se adueña de `data/` al arrancar y ejecuta la API sin privilegios, así Docker funciona en Linux sin cambiar permisos.
+- Se retiraron del repositorio las skills locales de Claude Code, ajenas a la solución.
+
+**Validación del autor:** pruebas del dominio con cobertura, pruebas unitarias, de integración y e2e de la API, pruebas del frontend, lint, verificación de tipos, build y recorrido en el navegador sobre `docker compose`.
+
+---
+
 ## 4. Decisiones del autor frente a las propuestas de la IA
 
 | Tema | Propuesta de la IA | Decisión final | Justificación |
@@ -191,6 +219,8 @@ No escribas código hasta que la especificación esté aprobada.
 | Registro de Swagger | Parche sobre las entrañas de Express para registrarlo tras `init()` | **Rechazada** | Swagger se registra antes de `init()` también en pruebas, sin modificar internos de Express |
 | Guardas del motor financiero | Plazo máximo 30 años, cuota mayor que el interés inicial, monto mínimo un centavo | Aceptada | Propuestas por la revisión final del dominio |
 | Cierre de sesión con access token vencido | No revocaba la sesión | **Corregida** | Detectado en la revisión final del frontend |
+| Cédula con una solicitud abierta | Aviso que no bloquea el registro | **Modificada:** se bloquea en la API y en el formulario | Dos solicitudes simultáneas del mismo cliente duplicarían la evaluación de riesgo |
+| Selector de fecha | Estilizar el control nativo | **Modificada:** calendario propio | El calendario nativo no admite estilos y obliga a retroceder mes a mes para una fecha de nacimiento |
 | Trailer de autoría de los commits | La herramienta insertaba otro modelo | **Corregida:** normalizado a Claude Fable 5.1 en cada commit | Mantiene la trazabilidad de quién controló cada sesión |
 
 ---
