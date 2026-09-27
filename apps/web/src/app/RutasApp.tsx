@@ -9,6 +9,7 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { RequireAuth } from '../features/auth/RequireAuth';
 import { ListadoPage } from '../features/solicitudes/ListadoPage';
 import { NuevaSolicitudPage } from '../features/solicitudes/NuevaSolicitudPage';
+import { ConsultaPage } from '../features/plan-pagos/ConsultaPage';
 import { InicioRedirect } from './InicioRedirect';
 import { Layout } from './Layout';
 
@@ -20,6 +21,7 @@ export function RutasApp() {
         <Route element={<Layout />}>
           <Route index element={<InicioRedirect />} />
           <Route path="/solicitudes" element={<ListadoPage />} />
+          <Route path="/plan-pagos" element={<ConsultaPage />} />
           <Route element={<RequireRol roles={[Rol.OFICIAL]} />}>
             <Route path="/solicitudes/nueva" element={<NuevaSolicitudPage />} />
           </Route>

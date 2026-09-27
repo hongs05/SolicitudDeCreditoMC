@@ -116,6 +116,24 @@ No escribas código hasta que la especificación esté aprobada.
 
 **Validación del autor:** revisión del código, ejecución de la suite completa y prueba manual con curl.
 
+### 3.5 Implementación del frontend
+
+- **Fecha:** 2026-09-26
+- **Modelo:** Claude Fable 5.1 como controlador; Claude Sonnet como implementador y revisor
+- **Objetivo:** implementar `apps/web` según el plan 3.
+
+**Instrucciones dadas a la herramienta**
+
+- Ejecutar el plan `docs/superpowers/plans/2026-09-25-03-web.md` y sus partes B a E con TDD, tarea por tarea.
+
+**Resultados**
+
+- Seis pantallas con menú por rol, idioma español e inglés y cuota nivelada calculada en vivo con el mismo código que usa la API.
+- Sesión con access token en memoria, refresh en cookie `httpOnly` y arranque silencioso al recargar.
+- Protección contra doble envío en el dictamen y el desembolso.
+
+**Validación del autor:** recorrido manual completo con los cuatro roles y revisión del código. El recorrido de la tarea 8 se hizo con `curl` contra la API (login por rol, registro, aprobación, desembolso y consulta del plan) y verificación del proxy de Vite hacia `/api/v1/health`, en lugar de un navegador interactivo.
+
 ---
 
 ## 4. Decisiones del autor frente a las propuestas de la IA
