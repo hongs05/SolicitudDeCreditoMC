@@ -134,6 +134,20 @@ No escribas código hasta que la especificación esté aprobada.
 
 **Validación del autor:** recorrido manual completo con los cuatro roles y revisión del código. El recorrido de la tarea 8 se hizo con `curl` contra la API (login por rol, registro, aprobación, desembolso y consulta del plan) y verificación del proxy de Vite hacia `/api/v1/health`, en lugar de un navegador interactivo.
 
+### 3.6 Infraestructura y entrega
+
+- **Fecha:** 2026-09-26
+- **Modelo:** Claude Fable 5.1 como controlador; Claude Sonnet y Claude Haiku 4.5 como implementadores; Claude Sonnet como revisor por tarea y Claude Opus como revisor final de cada plan
+- **Objetivo:** contenerizar la solución, configurar CI y preparar la entrega.
+
+**Resultados**
+
+- Imágenes multi-stage para API y web, y `docker-compose.yml` que levanta todo con un comando.
+- Workflow de CI con lint, pruebas, cobertura del dominio y prueba de humo sobre Docker.
+- README con arranque, recorrido guiado, arquitectura, interpretaciones del enunciado y limitaciones.
+
+**Validación del autor:** ejecución de `docker compose up --build` en limpio y recorrido completo en el navegador.
+
 ---
 
 ## 4. Decisiones del autor frente a las propuestas de la IA
@@ -150,6 +164,11 @@ No escribas código hasta que la especificación esté aprobada.
 | Integración continua | GitHub Actions con prueba de humo sobre Docker | Aceptada | Demuestra que el entorno se levanta sin fallos |
 | Pantalla del comité | Mostrar solo los siete campos que exige el enunciado | Aceptada | Es la instrucción explícita del enunciado |
 | Moneda | Córdobas | Aceptada | Los cuatro bancos del enunciado operan en Nicaragua |
+| Redondeo del caso C | Redondeo mitad al par para cuadrar una tabla | **Rechazada:** se mantuvo mitad hacia arriba | Se corrigió la referencia en lugar de cambiar la regla de redondeo |
+| Registro de Swagger | Parche sobre las entrañas de Express para registrarlo tras `init()` | **Rechazada** | Swagger se registra antes de `init()` también en pruebas, sin modificar internos de Express |
+| Guardas del motor financiero | Plazo máximo 30 años, cuota mayor que el interés inicial, monto mínimo un centavo | Aceptada | Propuestas por la revisión final del dominio |
+| Cierre de sesión con access token vencido | No revocaba la sesión | **Corregida** | Detectado en la revisión final del frontend |
+| Trailer de autoría de los commits | La herramienta insertaba otro modelo | **Corregida:** normalizado a Claude Fable 5.1 en cada commit | Mantiene la trazabilidad de quién controló cada sesión |
 
 ---
 
