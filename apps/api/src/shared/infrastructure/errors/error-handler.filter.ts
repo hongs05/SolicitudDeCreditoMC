@@ -2,6 +2,7 @@ import {
   type ArgumentsHost, Catch, type ExceptionFilter, HttpException, Logger,
 } from '@nestjs/common';
 import { type CodigoError, esDomainError, normalizarLocale, resolverMensaje } from '@credito/domain';
+import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { type DetalleValidacion, ValidacionException } from '../validation/validacion.exception';
 
@@ -25,6 +26,9 @@ export function clasificar(excepcion: unknown): Clasificacion {
     if (statusCode === 403) return { statusCode, code: 'PROHIBIDO', params: {} };
     if (statusCode === 404) return { statusCode, code: 'NO_ENCONTRADO', params: { recurso: 'Recurso' } };
     if (statusCode < 500) return { statusCode, code: 'VALIDACION', params: {} };
+  }
+  if (excepcion instanceof Prisma.PrismaClientKnownRequestError && excepcion.code === 'P2002') {
+    return { statusCode: 409, code: 'CONFLICTO', params: {} };
   }
   return { statusCode: 500, code: 'ERROR_INTERNO', params: {} };
 }

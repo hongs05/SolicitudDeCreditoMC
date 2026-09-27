@@ -1,7 +1,7 @@
 import { esFechaValida } from '@credito/domain';
 import { Length, Max, Min, registerDecorator } from 'class-validator';
 
-const PATRON_DECIMAL = /^\d+(\.\d{1,2})?$/;
+const PATRON_DECIMAL = /^\d{1,12}(\.\d{1,2})?$/;
 const esDecimalValido = (valor: unknown): valor is string =>
   typeof valor === 'string' && PATRON_DECIMAL.test(valor);
 

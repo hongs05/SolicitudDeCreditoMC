@@ -1,5 +1,5 @@
 import { NoAutenticadoError, Rol } from '@credito/domain';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { prepararAuth } from '../../testing/preparar-auth';
 
 describe('Login', () => {
@@ -22,5 +22,13 @@ describe('Login', () => {
 
   it('rechaza un usuario inexistente', async () => {
     await expect(prepararAuth().login.ejecutar('nadie', 'Demo2026!')).rejects.toBeInstanceOf(NoAutenticadoError);
+  });
+
+  it('compara contra un hash ficticio cuando el usuario no existe (tiempo constante)', async () => {
+    const { hasher, login } = prepararAuth();
+    const espia = vi.spyOn(hasher, 'comparar');
+    await expect(login.ejecutar('nadie', 'Demo2026!')).rejects.toBeInstanceOf(NoAutenticadoError);
+    expect(espia).toHaveBeenCalledTimes(1);
+    expect(espia).toHaveBeenCalledWith('Demo2026!', expect.stringMatching(/^\$2[aby]?\$/));
   });
 });

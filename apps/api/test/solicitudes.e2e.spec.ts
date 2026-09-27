@@ -61,6 +61,22 @@ describe('solicitudes', () => {
     ]));
   });
 
+  it('recorta espacios antes de validar y rechaza campos que quedan vacíos', async () => {
+    const r = await como(oficial)
+      .post('/api/v1/solicitudes', cuerpoSolicitud({ nombreCompleto: '   ', empresa: ' a ' }))
+      .expect(400);
+    expect(r.body.details).toEqual(expect.arrayContaining([
+      expect.objectContaining({ field: 'nombreCompleto', code: 'REQUERIDO' }),
+      expect.objectContaining({ field: 'empresa', code: 'LONGITUD_INVALIDA' }),
+    ]));
+  });
+
+  it('trata los filtros vacíos como ausentes', async () => {
+    await crear({ cedula: 'FILTRO-VACIO' });
+    const r = await como(analista).get('/api/v1/solicitudes?estado=&cedula=').expect(200);
+    expect(r.body.total).toBeGreaterThanOrEqual(1);
+  });
+
   it.each([['2026-02-30'], ['2999-01-01'], ['01/01/1990']])('rechaza la fecha de nacimiento %s', async (fecha) => {
     const r = await como(oficial).post('/api/v1/solicitudes', cuerpoSolicitud({ fechaNacimiento: fecha })).expect(400);
     expect(r.body.details).toEqual([expect.objectContaining({ field: 'fechaNacimiento', code: 'FECHA_INVALIDA' })]);
@@ -106,12 +122,12 @@ describe('solicitudes', () => {
     expect(r.body.message).toBe('No se puede aprobar una solicitud en estado aprobada');
   });
 
-  it('observaciones vacías dan 400 y solo espacios dan 422', async () => {
+  it('observaciones vacías o de solo espacios dan 400 REQUERIDO (se recortan antes de validar)', async () => {
     const id = await crear();
     const vacias = await como(analista).post(`/api/v1/solicitudes/${id}/rechazar`, {}).expect(400);
     expect(vacias.body.details[0]).toMatchObject({ field: 'observaciones', code: 'REQUERIDO' });
-    const espacios = await como(analista).post(`/api/v1/solicitudes/${id}/rechazar`, { observaciones: '   ' }).expect(422);
-    expect(espacios.body.code).toBe('OBSERVACIONES_REQUERIDAS');
+    const espacios = await como(analista).post(`/api/v1/solicitudes/${id}/rechazar`, { observaciones: '   ' }).expect(400);
+    expect(espacios.body.details[0]).toMatchObject({ field: 'observaciones', code: 'REQUERIDO' });
   });
 
   it('rechazar no crea crédito', async () => {

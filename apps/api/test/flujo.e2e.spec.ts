@@ -46,5 +46,6 @@ describe('flujo completo', () => {
     expect(Object.keys(r.body.paths)).toEqual(expect.arrayContaining([
       '/api/v1/solicitudes', '/api/v1/creditos/{id}/plan-pagos', '/api/v1/desembolsos', '/api/v1/auth/login',
     ]));
+    expect(r.body.security).toEqual([{ bearer: [] }]);
   });
 });

@@ -407,6 +407,7 @@ El frontend usa el mismo catálogo para sus validaciones locales.
 | `OBSERVACIONES_REQUERIDAS` | 422 | dominio | Las observaciones son obligatorias | Observations are required |
 | `CREDITO_NO_APROBADO` | 422 | dominio | Solo se desembolsan créditos aprobados | Only approved credits can be disbursed |
 | `PARAMETROS_CREDITO_INVALIDOS` | 422 | dominio | Condiciones del crédito inválidas: {campo} | Invalid credit terms: {campo} |
+| `CONFLICTO` | 409 | filtro (Prisma P2002) | La operación entra en conflicto con un registro existente | The operation conflicts with an existing record |
 | `ERROR_INTERNO` | 500 | filtro | Ocurrió un error inesperado | An unexpected error occurred |
 
 Los valores de `{recurso}`, `{accion}`, `{estado}` y `{campo}` también se traducen por catálogo.

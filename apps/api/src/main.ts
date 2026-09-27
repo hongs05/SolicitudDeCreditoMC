@@ -16,4 +16,7 @@ async function iniciar(): Promise<void> {
   await app.listen(config.puerto);
 }
 
-void iniciar();
+iniciar().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

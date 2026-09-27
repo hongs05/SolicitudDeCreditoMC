@@ -1,4 +1,4 @@
-import { type CuotaPlan, esEstadoSolicitud, esPeriodicidad, esRol } from '@credito/domain';
+import { type CuotaPlan, esEstadoSolicitud, esPeriodicidad, esRol, type Rol } from '@credito/domain';
 import { Prisma, type PrismaClient } from '@prisma/client';
 import type { Paginado } from '../../shared/application/vistas';
 import { aNumero } from '../../shared/infrastructure/prisma/decimal';
@@ -11,13 +11,17 @@ const INCLUIR = {
 
 type CreditoConRelaciones = Prisma.CreditoGetPayload<{ include: typeof INCLUIR }>;
 
+function comoRol(rol: string, usuarioId: number): Rol {
+  if (!esRol(rol)) throw new Error(`Usuario ${usuarioId} con rol inválido`);
+  return rol;
+}
+
 function aVista(f: CreditoConRelaciones): CreditoVista {
   const { estado } = f.solicitud;
   if (!esEstadoSolicitud(estado) || !esPeriodicidad(f.periodicidad)) {
     throw new Error(`Crédito ${f.id} con datos inválidos`);
   }
   const d = f.desembolso;
-  if (d && !esRol(d.ejecutadoPor.rol)) throw new Error(`Usuario ${d.ejecutadoPor.id} con rol inválido`);
   return {
     id: f.id,
     numero: f.numero,
@@ -38,7 +42,11 @@ function aVista(f: CreditoConRelaciones): CreditoVista {
           creditoId: d.creditoId,
           banco: { id: d.banco.id, codigo: d.banco.codigo, nombre: d.banco.nombre },
           numeroCuenta: d.numeroCuenta,
-          ejecutadoPor: { id: d.ejecutadoPor.id, username: d.ejecutadoPor.username, rol: d.ejecutadoPor.rol as never },
+          ejecutadoPor: {
+            id: d.ejecutadoPor.id,
+            username: d.ejecutadoPor.username,
+            rol: comoRol(d.ejecutadoPor.rol, d.ejecutadoPor.id),
+          },
           ejecutadoEn: d.ejecutadoEn,
         }
       : null,
