@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @credito/domain
+      - run: npm run lint
+      - name: Cobertura del dominio (umbral 95 %)
+        run: npm run test:cov -w @credito/domain
+      - run: npm run test:all
+      - run: npm run build
+
+  docker:
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Permitir escritura del usuario node sobre data/
+        run: chmod 777 data
+      - name: Levantar la solución
+        run: docker compose up -d --build --wait
+      - name: Health a través de nginx
+        run: curl -fsS http://localhost:8080/api/v1/health
+      - name: Login a través de nginx
+        run: |
+          curl -fsS -X POST http://localhost:8080/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"oficial","password":"Demo2026!"}' | grep -q accessToken
+      - name: Logs si algo falló
+        if: failure()
+        run: docker compose logs
+      - name: Apagar
+        if: always()
+        run: docker compose down
