@@ -6,7 +6,7 @@ import type { CreditoResumen } from '../../shared/api/tipos';
 import { formatearDinero, textoPlazo } from '../../shared/format/formato';
 import { useT } from '../../shared/i18n/I18nProvider';
 import { claseBoton } from '../../shared/ui/Button';
-import { Cargando } from '../../shared/ui/Cargando';
+import { EsqueletoTabla } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Paginador } from '../../shared/ui/Paginador';
@@ -32,7 +32,7 @@ export function BandejaPage() {
         </div>
       ),
     },
-    { clave: 'monto', titulo: t('campo.monto'), celda: (c) => formatearDinero(c.monto, locale), derecha: true, mono: true },
+    { clave: 'monto', titulo: t('campo.monto'), celda: (c) => formatearDinero(c.monto, locale), derecha: true },
     { clave: 'plazo', titulo: t('campo.plazo'), celda: (c) => <span className="text-muted">{textoPlazo(c.plazo, c.periodicidad, t)}</span>, secundaria: true },
     { clave: 'ir', titulo: '', derecha: true, secundaria: true, celda: (c) => <Link to={`/desembolsos/${c.id}`} className={claseBoton('secundario', 'sm')}>{t('detalle.desembolsar')}</Link> },
   ];
@@ -48,7 +48,7 @@ export function BandejaPage() {
     <>
       <Encabezado titulo={t('desembolso.titulo')} subtitulo={consulta.data ? subtitulo : undefined} />
       <section className="min-w-0 rounded-[14px] border border-line bg-surface">
-        {consulta.isPending ? <Cargando /> : consulta.isError ? (
+        {consulta.isPending ? <EsqueletoTabla columnas={5} /> : consulta.isError ? (
           <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
         ) : (
           <>

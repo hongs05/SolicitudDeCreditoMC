@@ -14,6 +14,12 @@ import { useAuth } from './AuthProvider';
 const USUARIOS_DEMO = [Rol.OFICIAL, Rol.ANALISTA, Rol.CAJERO, Rol.ADMIN].map((rol) => ({ username: rol.toLowerCase(), rol }));
 const PASSWORD_DEMO = 'Demo2026!';
 
+const PASOS = [
+  { icono: 'mas', titulo: 'login.pasoRegistro', texto: 'login.pasoRegistroTexto' },
+  { icono: 'mazo', titulo: 'login.pasoDictamen', texto: 'login.pasoDictamenTexto' },
+  { icono: 'banco', titulo: 'login.pasoDesembolso', texto: 'login.pasoDesembolsoTexto' },
+] as const;
+
 export function LoginPage() {
   const { t } = useT();
   const { usuario, iniciarSesion } = useAuth();
@@ -56,17 +62,26 @@ export function LoginPage() {
     <div className="grid min-h-dvh md:grid-cols-2">
       <aside className="relative hidden flex-col justify-between gap-8 overflow-hidden bg-band px-12 py-9 md:flex">
         <span className="inline-flex items-center gap-2.5"><Logo /><b className="text-[17px] font-extrabold tracking-[-0.03em]">Crédito MC</b></span>
-        <svg viewBox="0 0 200 100" aria-hidden="true" className="absolute top-1/2 -right-15 h-45 w-90 -translate-y-1/2 opacity-15">
-          <path d="M10 70c25-46 55-49 88-24s62 22 92-26" fill="none" stroke="#fcd34d" strokeWidth="18" strokeLinecap="round" />
-        </svg>
-        <blockquote className="m-0 max-w-[13ch] text-[clamp(34px,3.6vw,52px)] leading-none font-extrabold tracking-[-0.045em]">
-          {t('login.lema')} <em className="text-accent not-italic">{t('login.lemaResaltado')}</em>
-        </blockquote>
-        <div className="flex flex-wrap gap-7 text-[12.5px] text-muted">
-          <span><b className="block text-xl font-bold text-ink">4</b>{t('login.roles')}</span>
-          <span><b className="block text-xl font-bold text-ink">4</b>{t('login.estados')}</span>
-          <span><b className="block text-xl font-bold text-ink">C$</b>{t('login.cordobas')}</span>
+        <div className="grid gap-10">
+          <p className="m-0 max-w-[13ch] text-[clamp(34px,3.6vw,52px)] leading-none font-extrabold tracking-[-0.035em]">
+            {t('login.lema')} <em className="text-accent-strong not-italic">{t('login.lemaResaltado')}</em>
+          </p>
+          {/* El recorrido real de una solicitud: aquí el orden sí es información. */}
+          <ol className="grid max-w-[44ch] gap-4">
+            {PASOS.map((paso, i) => (
+              <li key={paso.titulo} className="grid grid-cols-[36px_1fr] items-start gap-3">
+                <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-surface text-accent-strong shadow-card">
+                  <Icono nombre={paso.icono} />
+                </span>
+                <div>
+                  <b className="block font-semibold">{i + 1}. {t(paso.titulo)}</b>
+                  <span className="text-[13px] text-muted">{t(paso.texto)}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
+        <span aria-hidden="true" />
       </aside>
 
       <main className="flex flex-col px-4 pt-4.5 pb-10">
@@ -105,7 +120,7 @@ export function LoginPage() {
             </form>
 
             <div className="grid gap-2.5 border-t border-dashed border-line-strong pt-5">
-              <span className="text-[11px] font-semibold tracking-[0.1em] text-muted uppercase">{t('login.demo')}</span>
+              <h2 className="text-sm font-semibold text-ink">{t('login.demo')}</h2>
               <div className="grid grid-cols-2 gap-2">
                 {USUARIOS_DEMO.map((u) => (
                   <button key={u.username} type="button" onClick={() => elegirDemo(u.username)} aria-pressed={username === u.username}

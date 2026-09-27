@@ -208,7 +208,7 @@ export const CampoFecha = forwardRef<HTMLInputElement, CampoFechaProps>(function
               onChange={(e) => setFoco(enMes(anioVista, Number(e.target.value), parsearFecha(foco).dia))}>
               {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{nombreMes(i + 1)}</option>)}
             </select>
-            <select aria-label={t('fecha.anio')} className={`${claseSelector} font-mono`} value={anioVista}
+            <select aria-label={t('fecha.anio')} className={`${claseSelector} tabular-nums`} value={anioVista}
               onChange={(e) => setFoco(enMes(Number(e.target.value), mesVista, parsearFecha(foco).dia))}>
               {anios.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>

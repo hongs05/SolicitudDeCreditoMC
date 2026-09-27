@@ -8,7 +8,7 @@ import { useT } from '../../shared/i18n/I18nProvider';
 import { BadgeEstado } from '../../shared/ui/Badge';
 import { Button, claseBoton } from '../../shared/ui/Button';
 import { Input } from '../../shared/ui/Campos';
-import { Cargando } from '../../shared/ui/Cargando';
+import { EsqueletoTabla } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Icono } from '../../shared/ui/Icono';
@@ -68,7 +68,7 @@ export function ListadoPage() {
         </div>
       ),
     },
-    { clave: 'monto', titulo: t('campo.montoSolicitado'), celda: (s) => formatearDinero(s.montoSolicitado, locale), derecha: true, mono: true },
+    { clave: 'monto', titulo: t('campo.montoSolicitado'), celda: (s) => formatearDinero(s.montoSolicitado, locale), derecha: true },
     { clave: 'plazo', titulo: t('campo.plazo'), celda: (s) => <span className="text-muted">{textoPlazo(s.cantidadCuotas, s.periodicidad, t)}</span>, secundaria: true },
     { clave: 'estado', titulo: t('campo.estado'), celda: (s) => <BadgeEstado estado={s.estado} /> },
     {
@@ -106,7 +106,7 @@ export function ListadoPage() {
             <span aria-live="polite" className="text-[13px] text-muted sm:ml-auto">{t('listado.cuenta', { n: consulta.data.total })}</span>
           )}
         </form>
-        {consulta.isPending ? <Cargando /> : consulta.isError ? (
+        {consulta.isPending ? <EsqueletoTabla columnas={6} /> : consulta.isError ? (
           <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
         ) : (
           <>

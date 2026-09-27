@@ -8,8 +8,8 @@ import {
 import { useT } from '../../shared/i18n/I18nProvider';
 import { BadgeEstado } from '../../shared/ui/Badge';
 import { claseBoton } from '../../shared/ui/Button';
-import { Cargando } from '../../shared/ui/Cargando';
 import { DatoLectura, GrupoDatos } from '../../shared/ui/DatoLectura';
+import { EsqueletoDetalle } from '../../shared/ui/Esqueleto';
 import { Encabezado } from '../../shared/ui/Encabezado';
 import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Icono } from '../../shared/ui/Icono';
@@ -43,7 +43,7 @@ function Historial({ eventos }: { eventos: Evento[] }) {
             <small className="block text-[12.5px] text-muted">{e.detalle}</small>
             {e.observaciones && <p className="mt-1.5 rounded-[10px] bg-maize-soft px-2.5 py-2 text-[12.5px] [overflow-wrap:anywhere]">{e.observaciones}</p>}
           </div>
-          <span className="font-mono text-[11.5px] whitespace-nowrap text-faint">{e.cuando ? formatearInstante(e.cuando, locale) : ''}</span>
+          <span className="text-xs whitespace-nowrap text-faint tabular-nums">{e.cuando ? formatearInstante(e.cuando, locale) : ''}</span>
         </li>
       ))}
     </ol>
@@ -57,7 +57,7 @@ export function DetallePage() {
   const consulta = useSolicitud(id);
   const credito = useCredito(consulta.data?.creditoId ?? null);
 
-  if (consulta.isPending) return <Cargando />;
+  if (consulta.isPending) return <EsqueletoDetalle />;
   if (consulta.isError) return <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />;
   const s = consulta.data;
   const c = credito.data;
@@ -118,13 +118,13 @@ export function DetallePage() {
               <DatoLectura etiqueta={t('detalle.nacimiento')} valor={formatearFecha(s.fechaNacimiento, locale)} />
               <DatoLectura etiqueta={t('campo.edad')} valor={t('comun.anios', { n: s.edad })} />
               <DatoLectura etiqueta={t('campo.correo')} valor={s.correo} />
-              <DatoLectura etiqueta={t('campo.telefono')} valor={s.telefono} mono />
+              <DatoLectura etiqueta={t('campo.telefono')} valor={s.telefono} />
             </GrupoDatos>
             <GrupoDatos titulo={t('detalle.laboral')}>
               <DatoLectura etiqueta={t('campo.tipoEmpleo')} valor={s.tipoEmpleo.nombre} />
               <DatoLectura etiqueta={t('campo.empresa')} valor={s.empresa} />
               <DatoLectura etiqueta={t('campo.antiguedadAnios')} valor={t(s.antiguedadAnios === 1 ? 'comun.anio' : 'comun.anios', { n: s.antiguedadAnios })} />
-              <DatoLectura etiqueta={t('campo.ingresoMensual')} valor={formatearDinero(s.ingresoMensual, locale)} mono />
+              <DatoLectura etiqueta={t('campo.ingresoMensual')} valor={formatearDinero(s.ingresoMensual, locale)} />
             </GrupoDatos>
           </section>
           <section className="rounded-[14px] border border-line bg-surface">
@@ -134,16 +134,16 @@ export function DetallePage() {
         </div>
         <aside className="overflow-hidden rounded-[14px] border border-line bg-surface xl:sticky xl:top-6">
           <div className="bg-band px-5 pt-5 pb-4.5">
-            <span className="text-[11px] font-semibold tracking-[0.1em] text-accent-strong uppercase">{t('panel.cuota')}</span>
+            <span className="text-sm font-semibold text-accent-strong">{t('panel.cuota')}</span>
             <div className="mt-1.5 text-[34px] leading-tight font-bold tracking-[-0.035em] tabular-nums">
               {formatearDinero(cuota, locale)} <small className="text-[13px] font-medium tracking-normal text-muted">{t(`panel.por.${s.periodicidad}`)}</small>
             </div>
           </div>
           <dl className="grid gap-2.5 px-5 py-4">
-            <DatoLectura etiqueta={t('campo.montoSolicitado')} valor={formatearDinero(s.montoSolicitado, locale)} mono />
-            <DatoLectura etiqueta={t('campo.tasa')} valor={formatearTasa(s.tasaAnual, locale)} mono />
+            <DatoLectura etiqueta={t('campo.montoSolicitado')} valor={formatearDinero(s.montoSolicitado, locale)} />
+            <DatoLectura etiqueta={t('campo.tasa')} valor={formatearTasa(s.tasaAnual, locale)} />
             <DatoLectura etiqueta={t('campo.plazo')} valor={plazo} />
-            <DatoLectura etiqueta={t('detalle.relacion')} valor={relacion === null ? '—' : `${relacion} %`} mono />
+            <DatoLectura etiqueta={t('detalle.relacion')} valor={relacion === null ? '—' : `${relacion} %`} />
             {c && <DatoLectura etiqueta={t('campo.numeroCredito')} valor={c.numero} mono />}
           </dl>
         </aside>

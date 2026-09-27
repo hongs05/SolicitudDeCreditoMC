@@ -16,7 +16,7 @@ function Fila({ etiqueta, valor, tono }: { etiqueta: string; valor: string; tono
   return (
     <div className="flex justify-between gap-3 border-b border-dashed border-line py-2.5 text-[13px] last:border-b-0">
       <span className="text-muted">{etiqueta}</span>
-      <span className={`text-right font-mono ${color}`}>{valor}</span>
+      <span className={`text-right font-medium tabular-nums ${color}`}>{valor}</span>
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function PanelCuota({ resumen, periodicidad, cuotas, avisos = [] }: Panel
   return (
     <section aria-label={t('panel.titulo')} className="overflow-hidden rounded-[14px] border border-line bg-surface">
       <div className="bg-band px-5 pt-5 pb-4.5">
-        <span className="text-[11px] font-semibold tracking-[0.1em] text-accent-strong uppercase">{t('panel.cuota')}</span>
+        <span className="text-sm font-semibold text-accent-strong">{t('panel.cuota')}</span>
         <div className="mt-1.5 text-[34px] leading-tight font-bold tracking-[-0.035em] tabular-nums">
           {plan ? formatearDinero(plan.cuota, locale) : 'C$ —'}{' '}
           {per && <small className="text-[13px] font-medium tracking-normal text-muted">{t(`panel.por.${per}`)}</small>}

@@ -71,7 +71,7 @@ export function Layout() {
       {/* La columna lleva el fondo para que la banda llegue al final aunque el menú sea sticky. */}
       <div className="lg:border-r lg:border-line lg:bg-surface">
         <aside id="menu-lateral"
-          className={`fixed inset-y-0 left-0 z-60 flex w-[min(290px,86vw)] flex-col gap-3.5 bg-surface px-3 py-4.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-auto lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+          className={`fixed inset-y-0 left-0 z-60 flex w-[min(290px,86vw)] flex-col gap-3.5 bg-surface px-3 py-4.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-auto lg:translate-x-0 motion-reduce:transition-none ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between px-2 py-1">
             <Marca />
             <button type="button" onClick={() => setMenuAbierto(false)} aria-label={t('nav.cerrarMenu')}
@@ -83,17 +83,17 @@ export function Layout() {
           <nav aria-label={t('nav.principal')} className="grid gap-0.5 overflow-y-auto">
             {grupos.map((grupo) => (
               <div key={grupo} className="grid gap-0.5">
-                <div className="px-2.5 pt-4 pb-1.5 text-[10.5px] font-semibold tracking-[0.06em] text-faint uppercase">{t(grupo)}</div>
+                <div className="px-2.5 pt-4 pb-1.5 text-xs font-semibold text-faint">{t(grupo)}</div>
                 {enlaces.filter((e) => e.grupo === grupo).map((e) => {
                   const esActivo = activo === e.ruta;
                   const cuenta = e.contador ? contadores[e.contador] : undefined;
                   return (
                     <Link key={e.ruta} to={e.ruta} aria-current={esActivo ? 'page' : undefined}
-                      className={`relative flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13.5px] font-semibold ${esActivo ? 'bg-accent-soft text-accent-strong' : 'text-muted hover:bg-surface-2 hover:text-ink'}`}>
+                      className={`relative flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13.5px] font-semibold max-lg:py-3 ${esActivo ? 'bg-accent-soft text-accent-strong' : 'text-muted hover:bg-surface-2 hover:text-ink'}`}>
                       <Icono nombre={e.icono} />
                       {t(e.clave)}
                       {cuenta !== undefined && (
-                        <span className={`ml-auto inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[11px] ${esActivo ? 'bg-accent text-on-accent' : cuenta > 0 ? 'bg-maize text-[#3d2e00]' : 'bg-surface-3 text-ink'}`}>{cuenta}</span>
+                        <span className={`ml-auto inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${esActivo ? 'bg-accent text-on-accent' : cuenta > 0 ? 'bg-maize text-[#3d2e00]' : 'bg-surface-3 text-ink'}`}>{cuenta}</span>
                       )}
                     </Link>
                   );

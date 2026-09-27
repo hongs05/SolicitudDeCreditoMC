@@ -2,7 +2,8 @@ import boundaries from 'eslint-plugin-boundaries';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'] },
+  // .claude/ guarda skills locales de Claude Code (ignoradas por git); no son código del proyecto.
+  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '.claude/**'] },
   ...tseslint.configs.recommended,
   {
     files: ['packages/domain/src/**/*.ts', 'apps/api/src/**/*.ts'],
