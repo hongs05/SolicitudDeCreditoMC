@@ -147,7 +147,6 @@ No escribas código hasta que la especificación esté aprobada.
 - README con arranque, recorrido guiado, arquitectura, interpretaciones del enunciado y limitaciones.
 
 **Validación del autor:** ejecución de `docker compose up --build` en limpio y recorrido completo en el navegador.
-
 ---
 
 ## 4. Decisiones del autor frente a las propuestas de la IA
