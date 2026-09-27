@@ -13,6 +13,7 @@ import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { DatoLectura } from '../../shared/ui/DatoLectura';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { useToast } from '../../shared/ui/Toast';
 import { TablaPlan } from '../plan-pagos/TablaPlan';
 
@@ -32,7 +33,7 @@ export function DesembolsoPage() {
   const enviando = useRef(false);
 
   if (consulta.isPending) return <Cargando />;
-  if (consulta.isError) return <p role="alert" className="text-red-700">{(consulta.error as Error).message}</p>;
+  if (consulta.isError) return <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />;
   const c = consulta.data;
   const disponible = puedeEjecutar(c.estado, 'desembolsar');
   const banco = bancos.data?.find((b) => String(b.id) === bancoId);
@@ -55,7 +56,17 @@ export function DesembolsoPage() {
       await desembolsar.mutateAsync({ creditoId: id, bancoId: Number(bancoId), numeroCuenta: cuenta.trim() });
       toast.exito(t('desembolso.exito', { numero: c.numero }));
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : String(e));
+      if (e instanceof ApiError && e.details.length > 0) {
+        const deCuenta = e.details.find((d) => d.field === 'numeroCuenta');
+        const deBanco = e.details.find((d) => d.field === 'bancoId');
+        if (deCuenta || deBanco) {
+          setErrores({ cuenta: deCuenta?.message, banco: deBanco?.message });
+        } else {
+          toast.error(e.message);
+        }
+      } else {
+        toast.error(e instanceof ApiError ? e.message : String(e));
+      }
     } finally {
       setConfirmando(false);
       enviando.current = false;

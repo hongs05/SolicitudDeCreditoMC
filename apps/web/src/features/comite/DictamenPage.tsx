@@ -12,6 +12,7 @@ import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { DatoLectura } from '../../shared/ui/DatoLectura';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { useToast } from '../../shared/ui/Toast';
 import { type AccionDictamen, useDictaminar } from './api';
 
@@ -28,7 +29,7 @@ export function DictamenPage() {
   const enviando = useRef(false);
 
   if (consulta.isPending) return <Cargando />;
-  if (consulta.isError) return <p role="alert" className="text-red-700">{(consulta.error as Error).message}</p>;
+  if (consulta.isError) return <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />;
   const s = consulta.data;
   const activa = puedeEjecutar(s.estado, 'aprobar');
 

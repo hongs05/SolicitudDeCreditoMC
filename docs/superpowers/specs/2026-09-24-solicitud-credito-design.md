@@ -775,7 +775,7 @@ apps/web/src/
     format/       dinero, fechas, periodicidad
 ```
 
-Los componentes no calculan. Todo cálculo sale de `packages/domain` y todo acceso a datos sale del `api.ts` de cada feature.
+Los componentes no calculan. Todo cálculo sale de `packages/domain` y todo acceso a datos sale del `api.ts` de cada feature. Los hooks de datos que comparten varias funcionalidades (solicitudes, créditos, catálogos) viven en `shared/api` en lugar del `api.ts` de cada funcionalidad.
 
 ### 7.3 Rutas
 

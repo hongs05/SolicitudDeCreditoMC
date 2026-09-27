@@ -10,6 +10,7 @@ import { Button } from '../../shared/ui/Button';
 import { Field, Input, Select } from '../../shared/ui/Campos';
 import { Card } from '../../shared/ui/Card';
 import { Cargando } from '../../shared/ui/Cargando';
+import { ErrorConsulta } from '../../shared/ui/ErrorConsulta';
 import { Paginador } from '../../shared/ui/Paginador';
 import { type Columna, Tabla } from '../../shared/ui/Tabla';
 import { useAuth } from '../auth/AuthProvider';
@@ -59,7 +60,9 @@ export function ListadoPage() {
           </Link>
         )}
       </div>
-      {consulta.isPending ? <Cargando /> : (
+      {consulta.isPending ? <Cargando /> : consulta.isError ? (
+        <ErrorConsulta error={consulta.error} onReintentar={() => void consulta.refetch()} />
+      ) : (
         <>
           <Tabla columnas={columnas} filas={consulta.data?.items ?? []} claveFila={(s) => s.id} />
           {consulta.data && consulta.data.total > 0 && (

@@ -1,5 +1,6 @@
 import { EstadoSolicitud } from '@credito/domain';
 import { screen } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderizar } from '../../test/render';
 import { useBancos } from '../api/catalogos';
@@ -48,6 +49,41 @@ describe('componentes', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Sí' }));
     expect(onConfirmar).toHaveBeenCalledOnce();
+  });
+
+  it('ConfirmDialog enfoca Cancelar al abrir, cierra con Escape y atrapa el Tab', async () => {
+    const onCancelar = vi.fn();
+    function Envoltura() {
+      const [abierto, setAbierto] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setAbierto(true)}>abrir</button>
+          <ConfirmDialog
+            abierto={abierto} titulo="T" mensaje="¿Seguro?" etiquetaConfirmar="Sí"
+            onConfirmar={vi.fn()} onCancelar={() => { onCancelar(); setAbierto(false); }}
+          />
+        </>
+      );
+    }
+    const { user } = renderizar(<Envoltura />);
+    const abrir = screen.getByRole('button', { name: 'abrir' });
+    abrir.focus();
+    await user.click(abrir);
+
+    const cancelar = await screen.findByRole('button', { name: 'Cancelar' });
+    expect(cancelar).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Sí' })).toHaveFocus();
+    await user.tab();
+    expect(cancelar).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole('button', { name: 'Sí' })).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(onCancelar).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(abrir).toHaveFocus();
   });
 
   it('useToast muestra avisos accesibles', async () => {
