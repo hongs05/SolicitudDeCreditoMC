@@ -1,6 +1,6 @@
-import { type DatosSolicitud, EstadoSolicitud, Periodicidad } from '@credito/domain';
+import { type DatosSolicitud, EstadoSolicitud, PATRON_NOMBRE, PATRON_TELEFONO, Periodicidad } from '@credito/domain';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { PaginacionDto } from '../../shared/infrastructure/http/paginacion.dto';
 import {
   DecimalMaximo, DecimalMinimo, EsDecimal, EsFechaPasada, Longitud, Maximo, Minimo,
@@ -9,7 +9,7 @@ import {
 const recortar = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
 
 export class CrearSolicitudDto {
-  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(3, 120)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(3, 120) @Matches(PATRON_NOMBRE)
   nombreCompleto!: string;
 
   @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(5, 30) @Matches(/^\S+$/)
@@ -18,7 +18,7 @@ export class CrearSolicitudDto {
   @Transform(recortar) @IsNotEmpty() @IsEmail()
   correo!: string;
 
-  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(7, 20)
+  @Transform(recortar) @IsNotEmpty() @IsString() @Longitud(7, 20) @Matches(PATRON_TELEFONO)
   telefono!: string;
 
   @IsNotEmpty() @EsFechaPasada()
@@ -62,6 +62,10 @@ export class FiltrosSolicitudesDto extends PaginacionDto {
 
   @Transform(vacioAIndefinido) @IsOptional() @IsString()
   cedula?: string;
+
+  /** Por fecha de registro. `asc` sirve a la bandeja del comité, que atiende por orden de llegada. */
+  @Transform(vacioAIndefinido) @IsOptional() @IsIn(['asc', 'desc'])
+  orden?: 'asc' | 'desc';
 }
 
 export const aDatosSolicitud = (dto: CrearSolicitudDto): DatosSolicitud => ({

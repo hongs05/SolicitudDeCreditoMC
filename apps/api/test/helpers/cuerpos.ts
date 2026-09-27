@@ -1,6 +1,11 @@
+let siguienteCedula = 1;
+
+/** Cada solicitud usa una cédula nueva: una cédula no puede tener dos solicitudes abiertas. */
+export const cedulaUnica = (): string => `0010101900${String(siguienteCedula++).padStart(3, '0')}A`;
+
 export const cuerpoSolicitud = (cambios: Record<string, unknown> = {}): Record<string, unknown> => ({
   nombreCompleto: 'Ana López',
-  cedula: '0010101900001A',
+  cedula: cedulaUnica(),
   correo: 'ana@example.com',
   telefono: '88887777',
   fechaNacimiento: '1990-01-01',

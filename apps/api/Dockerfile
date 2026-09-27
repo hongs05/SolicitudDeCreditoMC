@@ -34,6 +34,6 @@ COPY apps/api/docker-entrypoint.sh apps/api/docker-entrypoint.sh
 RUN chmod +x apps/api/docker-entrypoint.sh \
   && mkdir -p /app/data \
   && chown -R node:node /app/data
-USER node
+# Sin USER: el entrypoint arranca como root, se adueña de /app/data y baja a node antes de iniciar la API.
 EXPOSE 3000
 ENTRYPOINT ["/app/apps/api/docker-entrypoint.sh"]

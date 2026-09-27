@@ -1,19 +1,22 @@
-import { Periodicidad } from '@credito/domain';
+import { EstadoSolicitud, Periodicidad, sumarDias, sumarMeses } from '@credito/domain';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type Control, useController, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../shared/api/ApiError';
 import { useTiposEmpleo } from '../../shared/api/catalogos';
-import { useCrearSolicitud } from '../../shared/api/solicitudes';
-import { hoyNegocio } from '../../shared/format/formato';
+import { useCrearSolicitud, useSolicitudes } from '../../shared/api/solicitudes';
+import { hoyNegocio, numeroSolicitud } from '../../shared/format/formato';
 import type { ClaveTexto } from '../../shared/i18n/es';
 import { useT } from '../../shared/i18n/I18nProvider';
+import { avisarError } from '../../shared/ui/avisarError';
 import { Button } from '../../shared/ui/Button';
+import { CampoFecha, type CampoFechaProps } from '../../shared/ui/CampoFecha';
 import { Field, Input, Select } from '../../shared/ui/Campos';
-import { Card } from '../../shared/ui/Card';
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
+import { Encabezado } from '../../shared/ui/Encabezado';
 import { useToast } from '../../shared/ui/Toast';
-import { aCuerpoSolicitud, crearEsquemaSolicitud, VALORES_INICIALES, type ValoresSolicitud } from './esquema';
+import { aCuerpoSolicitud, crearEsquemaSolicitud, VALORES_EJEMPLO, VALORES_INICIALES, type ValoresSolicitud } from './esquema';
 import { PanelCuota } from './PanelCuota';
 import { resumirSolicitud } from './resumen-solicitud';
 
@@ -37,6 +40,51 @@ const ETIQUETAS: Record<NombreCampo, ClaveTexto> = {
 
 const esCampo = (nombre: string): nombre is NombreCampo => nombre in ETIQUETAS;
 
+/** Errores de negocio (409/422) que la API devuelve sin campo, y el campo del formulario donde se muestran. */
+const CAMPO_DE_CODIGO: Partial<Record<string, NombreCampo>> = {
+  EDAD_MAXIMA_EXCEDIDA: 'fechaNacimiento',
+  EDAD_MINIMA_NO_ALCANZADA: 'fechaNacimiento',
+  CEDULA_FECHA_DISTINTA: 'fechaNacimiento',
+  ANTIGUEDAD_INCONSISTENTE: 'antiguedadAnios',
+  PLAZO_MAXIMO_EXCEDIDO: 'cantidadCuotas',
+};
+const CAMPO_DE_CONDICION: Partial<Record<string, NombreCampo>> = {
+  monto: 'montoSolicitado', cuotas: 'cantidadCuotas', tasaAnual: 'tasaAnual', periodicidad: 'periodicidad',
+};
+
+/** Aviso bloqueante que se muestra en un modal. */
+type Bloqueo = { tipo: 'abierta'; id: number; estado: EstadoSolicitud } | { tipo: 'fechaDistinta' };
+const PERIODICIDADES = [Periodicidad.QUINCENAL, Periodicidad.MENSUAL, Periodicidad.ANUAL];
+
+/** Espera a que el valor deje de cambiar antes de usarlo, para no consultar la API en cada tecla. */
+function useDiferido<T>(valor: T, ms = 400): T {
+  const [diferido, setDiferido] = useState(valor);
+  useEffect(() => {
+    const id = setTimeout(() => setDiferido(valor), ms);
+    return () => clearTimeout(id);
+  }, [valor, ms]);
+  return diferido;
+}
+
+function Bloque({ numero, titulo, detalle, children }: { numero: string; titulo: string; detalle?: string; children: ReactNode }) {
+  return (
+    <fieldset className="grid min-w-0 gap-3.5 border-0 px-5 py-5.5 not-first:border-t not-first:border-dashed not-first:border-line-strong">
+      <legend className="float-left mb-0.5 flex w-full items-baseline gap-2.5 p-0 text-[17px] font-bold tracking-[-0.02em]">
+        <span aria-hidden="true" className="font-mono text-xs font-medium tracking-normal text-accent">{numero}</span>
+        {titulo}
+        {detalle && <span className="text-[12.5px] font-normal tracking-normal text-muted">{detalle}</span>}
+      </legend>
+      <div className="clear-both grid gap-3.5 sm:grid-cols-2">{children}</div>
+    </fieldset>
+  );
+}
+
+/** La fecha de nacimiento con el calendario propio. `Field` le pasa el id y los atributos aria. */
+function FechaNacimiento({ control, ...props }: { control: Control<ValoresSolicitud> } & Omit<CampoFechaProps, 'value' | 'onChange'>) {
+  const { field } = useController({ name: 'fechaNacimiento', control });
+  return <CampoFecha {...props} name={field.name} value={field.value} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} />;
+}
+
 export function NuevaSolicitudPage() {
   const { t, locale } = useT();
   const toast = useToast();
@@ -45,10 +93,11 @@ export function NuevaSolicitudPage() {
   const esquema = useMemo(() => crearEsquemaSolicitud(hoy, locale), [hoy, locale]);
   const tipos = useTiposEmpleo();
   const crear = useCrearSolicitud();
+  const [confirmarLimpiar, setConfirmarLimpiar] = useState(false);
 
   const {
-    register, handleSubmit, setError, watch, trigger,
-    formState: { errors, isSubmitted },
+    register, control, handleSubmit, setError, setFocus, watch, trigger, reset,
+    formState: { errors, isSubmitted, isDirty },
   } = useForm<ValoresSolicitud>({ resolver: zodResolver(esquema), mode: 'onTouched', defaultValues: VALORES_INICIALES });
 
   const esquemaAnterior = useRef(esquema);
@@ -62,14 +111,45 @@ export function NuevaSolicitudPage() {
     }
   }, [esquema, isSubmitted, errors, trigger]);
 
-  const resumen = resumirSolicitud(watch(), hoy);
+  const valores = watch();
+  const resumen = resumirSolicitud(valores, hoy);
 
-  const enviar = handleSubmit(async (valores) => {
+  // Aviso no bloqueante: la misma cédula ya tiene una solicitud abierta (pendiente o aprobada sin desembolsar).
+  const cedula = useDiferido(valores.cedula.trim());
+  const previas = useSolicitudes({ cedula, page: 1 }, cedula.length >= 5);
+  const abierta = cedula.length >= 5
+    ? previas.data?.items.find((s) => s.estado === EstadoSolicitud.PENDIENTE || s.estado === EstadoSolicitud.APROBADA)
+    : undefined;
+  const avisos = abierta
+    ? [t(abierta.estado === EstadoSolicitud.PENDIENTE ? 'panel.abiertaPendiente' : 'panel.abiertaAprobada', { numero: numeroSolicitud(abierta.id) })]
+    : [];
+
+  const [bloqueo, setBloqueo] = useState<Bloqueo | null>(null);
+
+  const enviar = handleSubmit(async (datos) => {
+    // Si ya se sabe que la cédula tiene una solicitud abierta, no se envía: la API la rechazaría igual.
+    if (abierta && datos.cedula.trim() === cedula) {
+      setBloqueo({ tipo: 'abierta', id: abierta.id, estado: abierta.estado });
+      return;
+    }
     try {
-      const creada = await crear.mutateAsync(aCuerpoSolicitud(valores));
-      toast.exito(t('solicitud.creada', { id: creada.id }));
-      navegar('/solicitudes');
+      const creada = await crear.mutateAsync(aCuerpoSolicitud(datos));
+      toast.exito(t('solicitud.creada', { id: numeroSolicitud(creada.id) }), { detalle: t('solicitud.creadaDetalle') });
+      navegar(`/solicitudes/${creada.id}`);
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'SOLICITUD_ABIERTA_EXISTENTE') {
+        const { id, estado } = error.params as { id: number; estado: EstadoSolicitud };
+        setBloqueo({ tipo: 'abierta', id, estado });
+        return;
+      }
+      const campoNegocio = error instanceof ApiError
+        ? CAMPO_DE_CODIGO[error.code] ?? (error.code === 'PARAMETROS_CREDITO_INVALIDOS' ? CAMPO_DE_CONDICION[String(error.params.campo)] : undefined)
+        : undefined;
+      if (error instanceof ApiError && campoNegocio) {
+        setError(campoNegocio, { message: error.message }, { shouldFocus: error.code !== 'CEDULA_FECHA_DISTINTA' });
+        if (error.code === 'CEDULA_FECHA_DISTINTA') setBloqueo({ tipo: 'fechaDistinta' });
+        return;
+      }
       if (error instanceof ApiError && error.details.length > 0) {
         const camposConocidos = error.details.filter((detalle) => esCampo(detalle.field));
         if (camposConocidos.length > 0) {
@@ -80,62 +160,119 @@ export function NuevaSolicitudPage() {
           toast.error(error.message);
         }
       } else {
-        toast.error(error instanceof ApiError ? error.message : String(error));
+        avisarError(toast, error, { generico: t('comun.errorGenerico'), reintentar: t('comun.reintentar') }, () => void enviar());
       }
     }
   });
 
-  const campo = (nombre: NombreCampo, props: Record<string, unknown> = {}) => (
-    <Field id={nombre} etiqueta={t(ETIQUETAS[nombre])} error={errors[nombre]?.message}>
+  const llenarEjemplo = () =>
+    reset({ ...VALORES_EJEMPLO, tipoEmpleoId: String(tipos.data?.[0]?.id ?? '') }, { keepDefaultValues: true });
+
+  const campo = (nombre: NombreCampo, props: Record<string, unknown> = {}, extra: { prefijo?: string; sufijo?: string; ancho?: boolean } = {}) => (
+    <Field id={nombre} etiqueta={t(ETIQUETAS[nombre])} error={errors[nombre]?.message}
+      prefijo={extra.prefijo} sufijo={extra.sufijo} className={extra.ancho ? 'sm:col-span-2' : ''}>
       <Input {...register(nombre)} {...props} />
     </Field>
   );
 
-  const selector = (nombre: 'tipoEmpleoId' | 'periodicidad', opciones: { valor: string; texto: string }[]) => (
-    <Field id={nombre} etiqueta={t(ETIQUETAS[nombre])} error={errors[nombre]?.message}>
-      <Select {...register(nombre)}>
-        <option value="">{t('campo.seleccione')}</option>
-        {opciones.map((o) => <option key={o.valor} value={o.valor}>{o.texto}</option>)}
-      </Select>
-    </Field>
-  );
+  const errorPeriodicidad = errors.periodicidad?.message;
 
   return (
-    <form onSubmit={enviar} noValidate className="grid gap-6 lg:grid-cols-3">
-      <div className="flex flex-col gap-6 lg:col-span-2">
-        <h1 className="text-2xl font-semibold">{t('solicitud.titulo')}</h1>
-        <Card titulo={t('solicitud.personal')}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campo('nombreCompleto', { autoComplete: 'name' })}
-            {campo('cedula')}
+    <>
+      <Encabezado
+        migas={[{ texto: t('nav.solicitudes'), a: '/solicitudes' }, { texto: t('solicitud.titulo') }]}
+        titulo={t('solicitud.titulo')}
+        subtitulo={t('solicitud.sub')}
+      />
+      <form onSubmit={enviar} noValidate className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="min-w-0 rounded-[14px] border border-line bg-surface">
+          <Bloque numero="01" titulo={t('solicitud.personal')} detalle={t('solicitud.delCliente')}>
+            {campo('nombreCompleto', { autoComplete: 'name' }, { ancho: true })}
+            {campo('cedula', { className: 'font-mono text-[13px]', placeholder: '001-000000-0000X' })}
+            <Field id="fechaNacimiento" etiqueta={t(ETIQUETAS.fechaNacimiento)} error={errors.fechaNacimiento?.message}>
+              {/* Abre unos 30 años atrás: nadie nace hoy, y así el mes y el año quedan a mano. */}
+              <FechaNacimiento control={control} max={sumarDias(hoy, -1)} referencia={sumarMeses(hoy, -360)} />
+            </Field>
             {campo('correo', { type: 'email', autoComplete: 'email' })}
-            {campo('telefono', { type: 'tel', autoComplete: 'tel' })}
-            {campo('fechaNacimiento', { type: 'date', max: hoy })}
-          </div>
-        </Card>
-        <Card titulo={t('solicitud.laboral')}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {selector('tipoEmpleoId', (tipos.data ?? []).map((tipo) => ({ valor: String(tipo.id), texto: tipo.nombre })))}
+            {campo('telefono', { type: 'tel', autoComplete: 'tel', className: 'font-mono text-[13px]' })}
+          </Bloque>
+          <Bloque numero="02" titulo={t('solicitud.laboral')}>
+            <Field id="tipoEmpleoId" etiqueta={t(ETIQUETAS.tipoEmpleoId)} error={errors.tipoEmpleoId?.message}>
+              <Select {...register('tipoEmpleoId')}>
+                <option value="">{t('campo.seleccione')}</option>
+                {(tipos.data ?? []).map((tipo) => <option key={tipo.id} value={String(tipo.id)}>{tipo.nombre}</option>)}
+              </Select>
+            </Field>
             {campo('empresa')}
-            {campo('antiguedadAnios', { inputMode: 'numeric' })}
-            {campo('ingresoMensual', { inputMode: 'decimal' })}
+            {campo('antiguedadAnios', { inputMode: 'numeric', className: 'font-mono text-[13px]' })}
+            {campo('ingresoMensual', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { prefijo: 'C$' })}
+          </Bloque>
+          <Bloque numero="03" titulo={t('solicitud.condiciones')}>
+            {campo('montoSolicitado', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { prefijo: 'C$' })}
+            {campo('tasaAnual', { inputMode: 'decimal', className: 'font-mono text-[13px]' }, { sufijo: '%' })}
+            {campo('cantidadCuotas', { inputMode: 'numeric', className: 'font-mono text-[13px]' })}
+            <div className="grid content-start gap-1.5">
+              <span id="periodicidad-etiqueta" className="text-[12.5px] font-semibold text-muted">{t(ETIQUETAS.periodicidad)}</span>
+              <div role="radiogroup" aria-labelledby="periodicidad-etiqueta" aria-invalid={errorPeriodicidad ? true : undefined}
+                aria-describedby={errorPeriodicidad ? 'periodicidad-error' : undefined}
+                className="grid grid-cols-3 gap-0.5 rounded-[10px] border border-line bg-surface-2 p-[3px]">
+                {PERIODICIDADES.map((p) => (
+                  <label key={p} className="relative cursor-pointer">
+                    <input type="radio" value={p} {...register('periodicidad')} className="peer sr-only" />
+                    <span className="block rounded p-1.5 text-center text-[13px] text-muted transition-colors peer-checked:bg-accent peer-checked:font-semibold peer-checked:text-on-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
+                      {t(`periodicidad.${p}`)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {errorPeriodicidad && <p id="periodicidad-error" className="text-xs text-danger">{errorPeriodicidad}</p>}
+            </div>
+          </Bloque>
+          <div className="flex flex-wrap justify-between gap-2.5 rounded-b-[14px] border-t border-line bg-surface-2 px-5 py-3.5">
+            <div className="flex flex-wrap gap-2">
+              <Button variante="secundario" tamano="sm" onClick={() => (isDirty ? setConfirmarLimpiar(true) : reset(VALORES_INICIALES))}>
+                {t('solicitud.limpiar')}
+              </Button>
+              <Button variante="discreto" tamano="sm" onClick={llenarEjemplo}>{t('solicitud.ejemplo')}</Button>
+            </div>
+            <Button type="submit" cargando={crear.isPending} disabled={resumen.edadExcedida}>{t('solicitud.enviar')}</Button>
           </div>
-        </Card>
-        <Card titulo={t('solicitud.condiciones')}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campo('montoSolicitado', { inputMode: 'decimal' })}
-            {campo('cantidadCuotas', { inputMode: 'numeric' })}
-            {campo('tasaAnual', { inputMode: 'decimal' })}
-            {selector('periodicidad', Object.values(Periodicidad).map((p) => ({ valor: p, texto: t(`periodicidad.${p}`) })))}
-          </div>
-        </Card>
-      </div>
-      <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
-        <PanelCuota resumen={resumen} />
-        <Button type="submit" cargando={crear.isPending} disabled={resumen.edadExcedida}>
-          {t('solicitud.enviar')}
-        </Button>
-      </aside>
-    </form>
+        </section>
+        <aside className="xl:sticky xl:top-6">
+          <PanelCuota resumen={resumen} periodicidad={valores.periodicidad} cuotas={valores.cantidadCuotas} avisos={avisos} />
+        </aside>
+      </form>
+      <ConfirmDialog
+        abierto={confirmarLimpiar}
+        titulo={t('solicitud.limpiarTitulo')}
+        mensaje={t('solicitud.limpiarTexto')}
+        etiquetaConfirmar={t('solicitud.limpiar')}
+        variante="peligro"
+        onConfirmar={() => { reset(VALORES_INICIALES); setConfirmarLimpiar(false); }}
+        onCancelar={() => setConfirmarLimpiar(false)}
+      />
+      <ConfirmDialog
+        abierto={bloqueo?.tipo === 'abierta'}
+        tono="error"
+        titulo={t('error.abiertaTitulo')}
+        mensaje={bloqueo?.tipo === 'abierta'
+          ? t('error.abiertaTexto', { numero: numeroSolicitud(bloqueo.id), estado: t(`estado.${bloqueo.estado}`).toLowerCase() })
+          : ''}
+        etiquetaConfirmar={bloqueo?.tipo === 'abierta' ? t('error.verSolicitud', { numero: numeroSolicitud(bloqueo.id) }) : ''}
+        etiquetaCancelar={t('comun.entendido')}
+        onConfirmar={() => { if (bloqueo?.tipo === 'abierta') navegar(`/solicitudes/${bloqueo.id}`); }}
+        onCancelar={() => setBloqueo(null)}
+      />
+      <ConfirmDialog
+        abierto={bloqueo?.tipo === 'fechaDistinta'}
+        tono="aviso"
+        titulo={t('error.fechaDistintaTitulo')}
+        mensaje={t('error.fechaDistintaTexto')}
+        etiquetaConfirmar={t('error.revisarFecha')}
+        etiquetaCancelar={t('comun.entendido')}
+        onConfirmar={() => { setBloqueo(null); setTimeout(() => setFocus('fechaNacimiento'), 0); }}
+        onCancelar={() => setBloqueo(null)}
+      />
+    </>
   );
 }

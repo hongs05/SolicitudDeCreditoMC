@@ -38,6 +38,35 @@ describe('CrearSolicitud', () => {
     expect(p.uow.repos.solicitudes.filas.size).toBe(0);
   });
 
+  it('no registra una segunda solicitud abierta para la misma cédula', async () => {
+    const p = preparar();
+    const primera = await p.crear.ejecutar(datos(), 7);
+    await expect(p.crear.ejecutar(datos({ nombreCompleto: 'Otra Persona' }), 7)).rejects.toMatchObject({
+      code: 'SOLICITUD_ABIERTA_EXISTENTE', params: { id: primera, estado: EstadoSolicitud.PENDIENTE },
+    });
+    expect(p.uow.repos.solicitudes.filas.size).toBe(1);
+  });
+
+  it('permite otra solicitud cuando la anterior fue rechazada', async () => {
+    const p = preparar();
+    const primera = await p.crear.ejecutar(datos(), 7);
+    await p.rechazar.ejecutar({ solicitudId: primera, observaciones: 'No califica', usuarioId: 8 });
+    await expect(p.crear.ejecutar(datos(), 7)).resolves.toBe(2);
+  });
+
+  it('rechaza la misma cédula con otra fecha de nacimiento', async () => {
+    const p = preparar();
+    const primera = await p.crear.ejecutar(datos(), 7);
+    await p.rechazar.ejecutar({ solicitudId: primera, observaciones: 'No califica', usuarioId: 8 });
+    await expect(p.crear.ejecutar(datos({ fechaNacimiento: '1991-02-02' }), 7)).rejects.toMatchObject({ code: 'CEDULA_FECHA_DISTINTA' });
+  });
+
+  it('otra cédula no se ve afectada', async () => {
+    const p = preparar();
+    await p.crear.ejecutar(datos(), 7);
+    await expect(p.crear.ejecutar(datos({ cedula: 'OTRA-CEDULA', fechaNacimiento: '1985-05-05' }), 7)).resolves.toBe(2);
+  });
+
   it('rechaza un tipo de empleo inexistente', async () => {
     const p = preparar();
     await expect(p.crear.ejecutar(datos({ tipoEmpleoId: 99 }), 7)).rejects.toMatchObject({
@@ -64,7 +93,7 @@ describe('AprobarSolicitud', () => {
   it('numera los créditos en secuencia', async () => {
     const p = preparar();
     const a = await p.crear.ejecutar(datos(), 7);
-    const b = await p.crear.ejecutar(datos(), 7);
+    const b = await p.crear.ejecutar(datos({ cedula: '0010101900002B' }), 7);
     await p.aprobar.ejecutar({ solicitudId: a, observaciones: 'ok', usuarioId: 9 });
     const { creditoId } = await p.aprobar.ejecutar({ solicitudId: b, observaciones: 'ok', usuarioId: 9 });
     expect(p.uow.repos.creditos.creditos.get(creditoId)!.numero).toBe('CR-000002');

@@ -1,4 +1,4 @@
-import { Credito, type CreditoProps, type CuotaPlan, Solicitud, type SolicitudProps } from '@credito/domain';
+import { Credito, type CreditoProps, type CuotaPlan, Solicitud, type SolicitudPrevia, type SolicitudProps } from '@credito/domain';
 import type { RefreshTokenRepository } from '../auth/application/ports/refresh-token.repository';
 import type { UsuarioRepository } from '../auth/application/ports/usuario.repository';
 import { RefreshToken, type RefreshTokenProps } from '../auth/domain/refresh-token';
@@ -85,6 +85,12 @@ export class SolicitudesEnMemoria implements SolicitudRepository {
   async obtenerPorId(id: number): Promise<Solicitud | null> {
     const props = this.filas.get(id);
     return props ? Solicitud.reconstituir(props) : null;
+  }
+
+  async historialPorCedula(cedula: string): Promise<SolicitudPrevia[]> {
+    return [...this.filas.values()]
+      .filter((p) => p.cedula === cedula)
+      .map((p) => ({ id: p.id!, estado: p.estado, fechaNacimiento: p.fechaNacimiento }));
   }
 
   async crear(solicitud: Solicitud): Promise<Solicitud> {

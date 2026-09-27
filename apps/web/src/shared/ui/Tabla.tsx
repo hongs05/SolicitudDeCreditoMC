@@ -1,37 +1,65 @@
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useT } from '../i18n/I18nProvider';
+import { Vacio } from './Vacio';
 
 export interface Columna<T> {
   clave: string;
   titulo: string;
   celda(fila: T): ReactNode;
   derecha?: boolean;
+  /** Cifras en fuente monoespaciada (dinero, números de crédito). */
+  mono?: boolean;
+  /** Se oculta en pantallas angostas para que la tabla quepa. */
+  secundaria?: boolean;
 }
 
-export function Tabla<T>({ columnas, filas, claveFila }: { columnas: Columna<T>[]; filas: T[]; claveFila(fila: T): string | number }) {
+export interface TablaProps<T> {
+  columnas: Columna<T>[];
+  filas: T[];
+  claveFila(fila: T): string | number;
+  /** Al hacer clic o pulsar Enter en una fila. Los enlaces dentro de la fila siguen funcionando. */
+  onFila?(fila: T): void;
+  vacio?: ReactNode;
+  claseFila?(fila: T): string;
+  pie?: ReactNode;
+}
+
+export function Tabla<T>({ columnas, filas, claveFila, onFila, vacio, claseFila, pie }: TablaProps<T>) {
   const { t } = useT();
-  if (filas.length === 0) return <p className="py-6 text-center text-sm text-slate-500">{t('comun.sinResultados')}</p>;
+  if (filas.length === 0) return <>{vacio ?? <Vacio titulo={t('comun.sinResultados')} />}</>;
+  const teclado = (fila: T) => (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && e.target === e.currentTarget) onFila?.(fila);
+  };
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-200 text-sm">
+      <table className="w-full border-collapse text-[13.5px]">
         <thead>
           <tr>
             {columnas.map((c) => (
-              <th key={c.clave} scope="col" className={`px-3 py-2 font-medium text-slate-600 ${c.derecha ? 'text-right' : 'text-left'}`}>
+              <th key={c.clave} scope="col"
+                className={`border-b border-line bg-surface-2 px-3.5 py-2.5 text-[11px] font-semibold tracking-[0.08em] whitespace-nowrap text-muted uppercase ${c.derecha ? 'text-right' : 'text-left'} ${c.secundaria ? 'max-sm:hidden' : ''}`}>
                 {c.titulo}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody>
           {filas.map((fila) => (
-            <tr key={claveFila(fila)}>
+            <tr key={claveFila(fila)}
+              onClick={onFila ? (e) => { if (!(e.target as HTMLElement).closest('a,button')) onFila(fila); } : undefined}
+              onKeyDown={onFila ? teclado(fila) : undefined}
+              tabIndex={onFila ? 0 : undefined}
+              className={`border-b border-line last:border-b-0 ${onFila ? 'cursor-pointer transition-colors hover:bg-surface-2 focus-visible:outline-offset-[-2px]' : ''} ${claseFila?.(fila) ?? ''}`}>
               {columnas.map((c) => (
-                <td key={c.clave} className={`px-3 py-2 ${c.derecha ? 'text-right tabular-nums' : ''}`}>{c.celda(fila)}</td>
+                <td key={c.clave}
+                  className={`px-3.5 py-3 align-middle ${c.derecha ? 'text-right whitespace-nowrap' : ''} ${c.mono ? 'font-mono text-[13px]' : ''} ${c.secundaria ? 'max-sm:hidden' : ''}`}>
+                  {c.celda(fila)}
+                </td>
               ))}
             </tr>
           ))}
         </tbody>
+        {pie}
       </table>
     </div>
   );

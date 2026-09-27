@@ -63,3 +63,42 @@ describe('aCuerpoSolicitud', () => {
     expect(cuerpo.montoSolicitado).toBe('0.05');
   });
 });
+
+describe('reglas del cliente y del plazo', () => {
+  const validos = {
+    ...VALORES_INICIALES,
+    nombreCompleto: 'Ana López', cedula: '0010101900001A', correo: 'a@a.com', telefono: '8888-7777',
+    fechaNacimiento: '1990-01-01', tipoEmpleoId: '1', empresa: 'Empresa', antiguedadAnios: '5',
+    ingresoMensual: '30000', montoSolicitado: '10000', cantidadCuotas: '12', tasaAnual: '12',
+    periodicidad: 'MENSUAL',
+  };
+  const errores = (cambios: Record<string, string>) => {
+    const r = crearEsquemaSolicitud(HOY, 'es').safeParse({ ...validos, ...cambios });
+    return r.success ? {} : Object.fromEntries(r.error.issues.map((i) => [String(i.path[0]), i.message]));
+  };
+
+  it('acepta los datos válidos', () => {
+    expect(errores({})).toEqual({});
+  });
+
+  it('rechaza dígitos en el nombre y letras en el teléfono', () => {
+    expect(errores({ nombreCompleto: 'Ana 2', telefono: 'no tengo' })).toMatchObject({
+      nombreCompleto: 'El formato no es válido', telefono: 'El formato no es válido',
+    });
+  });
+
+  it('rechaza menores de 18 años', () => {
+    expect(errores({ fechaNacimiento: '2010-01-01' }).fechaNacimiento).toBe('El solicitante tiene 16 años y la edad mínima permitida es 18');
+  });
+
+  it('rechaza una antigüedad imposible para la edad, aunque otros campos tengan errores', () => {
+    const r = errores({ fechaNacimiento: '2000-01-01', antiguedadAnios: '20', correo: '' });
+    expect(r.antiguedadAnios).toBe('La antigüedad laboral no puede superar 12 años para un solicitante de 26 años');
+    expect(r).toHaveProperty('correo');
+  });
+
+  it('rechaza un plazo de más de 30 años según la periodicidad', () => {
+    expect(errores({ cantidadCuotas: '31', periodicidad: 'ANUAL' }).cantidadCuotas).toBe('El plazo del crédito no puede superar 30 años');
+    expect(errores({ cantidadCuotas: '360', periodicidad: 'QUINCENAL' })).toEqual({});
+  });
+});

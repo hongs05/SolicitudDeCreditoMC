@@ -1,5 +1,5 @@
 import { Rol } from '@credito/domain';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -31,7 +31,7 @@ describe('autenticación', () => {
     servidor.use(http.post('/api/v1/auth/refresh', () => HttpResponse.json(tokens(Rol.OFICIAL))));
     renderizar(rutas, { ruta: '/privado' });
     expect(await screen.findByText('contenido privado')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Iniciar sesión' })).not.toBeInTheDocument();
   });
 
   it('sin sesión redirige al login y vuelve a la ruta pedida al entrar', async () => {
@@ -39,19 +39,19 @@ describe('autenticación', () => {
     const { user } = renderizar(rutas, { ruta: '/privado' });
     await user.type(await screen.findByLabelText('Usuario'), 'oficial');
     await user.type(screen.getByLabelText('Contraseña'), 'Demo2026!');
-    await user.click(screen.getByRole('button', { name: 'Entrar' }));
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByText('contenido privado')).toBeInTheDocument();
   });
 
   it('muestra el mensaje de la API ante credenciales incorrectas', async () => {
     servidor.use(http.post('/api/v1/auth/login', () => HttpResponse.json(
-      { statusCode: 401, code: 'NO_AUTENTICADO', message: 'Credenciales inválidas o sesión expirada' }, { status: 401 },
+      { statusCode: 401, code: 'NO_AUTENTICADO', message: 'Usuario o contraseña incorrectos, o la sesión ha expirado' }, { status: 401 },
     )));
     const { user } = renderizar(rutas, { ruta: '/login' });
     await user.type(await screen.findByLabelText('Usuario'), 'x');
     await user.type(screen.getByLabelText('Contraseña'), 'y');
-    await user.click(screen.getByRole('button', { name: 'Entrar' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales inválidas o sesión expirada');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Usuario o contraseña incorrectos, o la sesión ha expirado');
   });
 
   it('RequireRol muestra 403 al rol equivocado y deja pasar a ADMIN', async () => {
@@ -72,6 +72,18 @@ describe('autenticación', () => {
     expect(screen.getByRole('link', { name: 'Plan de pagos' })).toBeInTheDocument();
   });
 
+  it('el menú marca la página actual y muestra cuántas solicitudes esperan al comité', async () => {
+    servidor.use(http.get('/api/v1/solicitudes', ({ request }) => {
+      const q = new URL(request.url).searchParams;
+      return HttpResponse.json({ items: [], total: q.get('estado') === 'PENDIENTE' ? 3 : 0, page: 1, pageSize: 1 });
+    }));
+    renderizar(rutas, { ruta: '/comite', usuario: tokens(Rol.ANALISTA).usuario });
+    const comite = await screen.findByRole('link', { name: /Comité de riesgo/ });
+    expect(comite).toHaveAttribute('aria-current', 'page');
+    expect(await within(comite).findByText('3')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Desembolsos/ })).not.toBeInTheDocument();
+  });
+
   it('cambiar el idioma traduce el menú', async () => {
     const { user } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
     await user.selectOptions(await screen.findByLabelText('Idioma'), 'en');
@@ -87,7 +99,8 @@ describe('autenticación', () => {
     const { user, queryClient } = renderizar(rutas, { ruta: '/privado', usuario: tokens(Rol.OFICIAL).usuario });
     const limpiarSpy = vi.spyOn(queryClient, 'clear');
     await screen.findByText('contenido privado');
-    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await user.click(screen.getByRole('button', { name: 'Menú de oficial' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }));
     expect(await screen.findByLabelText('Usuario')).toBeInTheDocument();
     expect(peticionesLogout).toBe(1);
     expect(limpiarSpy).toHaveBeenCalledOnce();

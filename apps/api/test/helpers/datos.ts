@@ -4,12 +4,13 @@ import { PrismaUnitOfWork } from '../../src/shared/infrastructure/prisma/prisma-
 import { AprobarSolicitud } from '../../src/solicitudes/application/aprobar-solicitud.use-case';
 import { CrearSolicitud } from '../../src/solicitudes/application/crear-solicitud.use-case';
 import { RelojFijo } from '../../src/testing/en-memoria';
+import { cedulaUnica } from './cuerpos';
 
 export const AHORA_PRUEBA = new Date('2026-09-24T15:00:00Z');
 
 export const datosSolicitud = (cambios: Partial<DatosSolicitud> = {}): DatosSolicitud => ({
   nombreCompleto: 'Ana López',
-  cedula: '0010101900001A',
+  cedula: cedulaUnica(),
   correo: 'ana@example.com',
   telefono: '88887777',
   fechaNacimiento: '1990-01-01',

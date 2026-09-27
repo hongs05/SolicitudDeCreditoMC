@@ -87,7 +87,50 @@ describe('solicitudes', () => {
       .post('/api/v1/solicitudes', cuerpoSolicitud({ fechaNacimiento: fechaHaceAnios(82) }))
       .expect(422);
     expect(r.body).toMatchObject({ code: 'EDAD_MAXIMA_EXCEDIDA' });
-    expect(r.body.message).toMatch(/el máximo es 80/);
+    expect(r.body.message).toMatch(/la edad máxima permitida es 80/);
+  });
+
+  it('no admite dos solicitudes abiertas con la misma cédula (409 con el id y el estado)', async () => {
+    const primera = await crear({ cedula: 'DUPLICADA-1' });
+    const r = await como(oficial).post('/api/v1/solicitudes', cuerpoSolicitud({ cedula: 'DUPLICADA-1' })).expect(409);
+    expect(r.body).toMatchObject({ code: 'SOLICITUD_ABIERTA_EXISTENTE', params: { id: primera, estado: 'PENDIENTE' } });
+    expect(r.body.message).toBe(`La cédula ya tiene la solicitud #${primera} en estado pendiente. Debe resolverse antes de registrar otra`);
+  });
+
+  it('admite otra solicitud cuando la anterior se rechazó, pero no con otra fecha de nacimiento', async () => {
+    const primera = await crear({ cedula: 'DUPLICADA-2' });
+    await como(analista).post(`/api/v1/solicitudes/${primera}/rechazar`, { observaciones: 'No califica' }).expect(200);
+    const r = await como(oficial)
+      .post('/api/v1/solicitudes', cuerpoSolicitud({ cedula: 'DUPLICADA-2', fechaNacimiento: '1991-02-02' })).expect(409);
+    expect(r.body.code).toBe('CEDULA_FECHA_DISTINTA');
+    await como(oficial).post('/api/v1/solicitudes', cuerpoSolicitud({ cedula: 'DUPLICADA-2' })).expect(201);
+  });
+
+  it('rechaza menores de 18 años con 422', async () => {
+    const r = await como(oficial).post('/api/v1/solicitudes', cuerpoSolicitud({ fechaNacimiento: fechaHaceAnios(16) })).expect(422);
+    expect(r.body).toMatchObject({ code: 'EDAD_MINIMA_NO_ALCANZADA', params: { min: 18 } });
+  });
+
+  it('rechaza una antigüedad laboral imposible para la edad con 422', async () => {
+    const r = await como(oficial)
+      .post('/api/v1/solicitudes', cuerpoSolicitud({ fechaNacimiento: fechaHaceAnios(25), antiguedadAnios: 20 })).expect(422);
+    expect(r.body).toMatchObject({ code: 'ANTIGUEDAD_INCONSISTENTE' });
+  });
+
+  it('rechaza un plazo de más de 30 años con 422', async () => {
+    const r = await como(oficial)
+      .post('/api/v1/solicitudes', cuerpoSolicitud({ cantidadCuotas: 31, periodicidad: 'ANUAL' })).expect(422);
+    expect(r.body).toMatchObject({ code: 'PLAZO_MAXIMO_EXCEDIDO', params: { max: 30 } });
+    expect(r.body.message).toBe('El plazo del crédito no puede superar 30 años');
+  });
+
+  it('valida el formato del nombre y del teléfono', async () => {
+    const r = await como(oficial)
+      .post('/api/v1/solicitudes', cuerpoSolicitud({ nombreCompleto: 'Ana 123', telefono: 'no tengo' })).expect(400);
+    expect(r.body.details).toEqual(expect.arrayContaining([
+      expect.objectContaining({ field: 'nombreCompleto', code: 'FORMATO_INVALIDO' }),
+      expect.objectContaining({ field: 'telefono', code: 'FORMATO_INVALIDO' }),
+    ]));
   });
 
   it('rechaza un tipo de empleo inexistente con 404', async () => {
@@ -105,6 +148,18 @@ describe('solicitudes', () => {
     await como(analista).get('/api/v1/solicitudes/abc').expect(400);
   });
 
+  it('ordena por fecha de registro: más nuevas primero por defecto, más viejas con orden=asc', async () => {
+    const ids = [await crear(), await crear(), await crear()];
+    // Solo interesa el orden relativo de las tres; el archivo crea otras solicitudes pendientes.
+    const orden = async (query: string) =>
+      (await como(analista).get(`/api/v1/solicitudes?estado=PENDIENTE&pageSize=100${query}`).expect(200)).body.items
+        .map((s: { id: number }) => s.id).filter((id: number) => ids.includes(id));
+    expect(await orden('')).toEqual([ids[2], ids[1], ids[0]]);
+    expect(await orden('&orden=desc')).toEqual([ids[2], ids[1], ids[0]]);
+    expect(await orden('&orden=asc')).toEqual(ids);
+    await como(analista).get('/api/v1/solicitudes?orden=lateral').expect(400);
+  });
+
   it('aprobar crea el crédito y devuelve ambos', async () => {
     const id = await crear();
     const r = await como(analista).post(`/api/v1/solicitudes/${id}/aprobar`, { observaciones: 'Buen perfil' }).expect(200);
@@ -119,7 +174,7 @@ describe('solicitudes', () => {
     const id = await crear();
     await como(analista).post(`/api/v1/solicitudes/${id}/aprobar`, { observaciones: 'ok' }).expect(200);
     const r = await como(analista).post(`/api/v1/solicitudes/${id}/aprobar`, { observaciones: 'ok' }).expect(409);
-    expect(r.body.message).toBe('No se puede aprobar una solicitud en estado aprobada');
+    expect(r.body.message).toBe('No es posible aprobar una solicitud en estado aprobada');
   });
 
   it('observaciones vacías o de solo espacios dan 400 REQUERIDO (se recortan antes de validar)', async () => {

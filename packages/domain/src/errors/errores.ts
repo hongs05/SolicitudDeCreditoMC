@@ -22,6 +22,38 @@ export class EdadMaximaExcedidaError extends DomainError {
   }
 }
 
+export class EdadMinimaNoAlcanzadaError extends DomainError {
+  constructor(edad: number, min: number) {
+    super('EDAD_MINIMA_NO_ALCANZADA', 422, { edad, min });
+  }
+}
+
+export class AntiguedadInconsistenteError extends DomainError {
+  constructor(max: number, edad: number) {
+    super('ANTIGUEDAD_INCONSISTENTE', 422, { max, edad });
+  }
+}
+
+export class PlazoMaximoExcedidoError extends DomainError {
+  constructor(max: number) {
+    super('PLAZO_MAXIMO_EXCEDIDO', 422, { max });
+  }
+}
+
+/** La cédula ya tiene una solicitud pendiente o aprobada sin desembolsar. */
+export class SolicitudAbiertaExistenteError extends DomainError {
+  constructor(id: number, estado: EstadoSolicitud) {
+    super('SOLICITUD_ABIERTA_EXISTENTE', 409, { id, estado });
+  }
+}
+
+/** La cédula ya se registró con otra fecha de nacimiento: probablemente es otra persona o un error de captura. */
+export class CedulaFechaDistintaError extends DomainError {
+  constructor() {
+    super('CEDULA_FECHA_DISTINTA', 409);
+  }
+}
+
 export class ObservacionesRequeridasError extends DomainError {
   constructor() {
     super('OBSERVACIONES_REQUERIDAS', 422);

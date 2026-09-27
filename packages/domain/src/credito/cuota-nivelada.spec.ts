@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ParametrosCreditoInvalidosError } from '../errors/errores';
+import { ParametrosCreditoInvalidosError, PlazoMaximoExcedidoError } from '../errors/errores';
 import { calcularCuotaNivelada, tasaPeriodica, validarCondiciones } from './cuota-nivelada';
 import { aCentavos, aUnidades } from './dinero';
 import { esPeriodicidad, Periodicidad, PERIODOS_POR_ANIO } from './periodicidad';
@@ -78,8 +78,6 @@ describe('validarCondiciones', () => {
     [{ tasaAnual: -1 }, 'tasaAnual'],
     [{ tasaAnual: 100.01 }, 'tasaAnual'],
     [{ periodicidad: 'SEMANAL' as Periodicidad }, 'periodicidad'],
-    [{ cuotas: 31, periodicidad: Periodicidad.ANUAL }, 'cuotas'],
-    [{ cuotas: 361, periodicidad: Periodicidad.MENSUAL }, 'cuotas'],
     [{ monto: 0.004 }, 'monto'],
   ])('%o falla en %s', (cambio, campo) => {
     const accion = () => validarCondiciones({ ...base, ...cambio });
@@ -89,6 +87,24 @@ describe('validarCondiciones', () => {
     } catch (error) {
       expect((error as ParametrosCreditoInvalidosError).params).toEqual({ campo });
     }
+  });
+
+  it.each([
+    [{ cuotas: 31, periodicidad: Periodicidad.ANUAL }],
+    [{ cuotas: 361, periodicidad: Periodicidad.MENSUAL }],
+    [{ cuotas: 721, periodicidad: Periodicidad.QUINCENAL }],
+  ])('%o supera el plazo máximo de 30 años', (cambio) => {
+    const accion = () => validarCondiciones({ ...base, ...cambio });
+    expect(accion).toThrow(PlazoMaximoExcedidoError);
+    try {
+      accion();
+    } catch (error) {
+      expect((error as PlazoMaximoExcedidoError).params).toEqual({ max: 30 });
+    }
+  });
+
+  it('acepta exactamente 30 años de plazo', () => {
+    expect(() => validarCondiciones({ ...base, cuotas: 720, periodicidad: Periodicidad.QUINCENAL })).not.toThrow();
   });
 
   it('acepta tasa 0 y tasa 100', () => {

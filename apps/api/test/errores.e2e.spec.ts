@@ -45,7 +45,7 @@ describe('manejo de errores', () => {
 
   it('un error inesperado responde 500 sin filtrar detalles', async () => {
     const r = await app.agente().get('/api/v1/prueba/fallo').expect(500);
-    expect(r.body).toMatchObject({ code: 'ERROR_INTERNO', message: 'Ocurrió un error inesperado' });
+    expect(r.body).toMatchObject({ code: 'ERROR_INTERNO', message: 'Ocurrió un error inesperado. Intente nuevamente o contacte a soporte' });
     expect(JSON.stringify(r.body)).not.toContain('boom');
     expect(r.body.stack).toBeUndefined();
   });

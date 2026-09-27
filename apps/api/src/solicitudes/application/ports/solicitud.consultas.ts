@@ -27,6 +27,7 @@ export interface SolicitudVista {
 export interface FiltrosSolicitudes extends Paginacion {
   estado?: EstadoSolicitud;
   cedula?: string;
+  orden?: 'asc' | 'desc';
 }
 
 export interface SolicitudConsultas {

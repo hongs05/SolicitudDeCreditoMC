@@ -1,5 +1,5 @@
 import { EstadoSolicitud, Rol } from '@credito/domain';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -11,6 +11,7 @@ import { DesembolsoPage } from './DesembolsoPage';
 const pantalla = (
   <Routes>
     <Route path="/desembolsos/:creditoId" element={<DesembolsoPage />} />
+    <Route path="/desembolsos" element={<p>bandeja de desembolsos</p>} />
   </Routes>
 );
 
@@ -53,13 +54,17 @@ describe('DesembolsoPage', () => {
     await user.clear(screen.getByLabelText('Número de cuenta'));
     await user.type(screen.getByLabelText('Número de cuenta'), '1002003004');
     await user.click(screen.getByRole('button', { name: 'Procesar desembolso' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('BAC Credomatic');
+    expect(screen.getByRole('dialog')).toHaveTextContent('BAC Credomatic · cuenta 1002003004');
     await user.click(screen.getAllByRole('button', { name: 'Procesar desembolso' })[1]!);
 
     expect(await screen.findByText('Desembolso realizado')).toBeInTheDocument();
     expect(cuerpo).toEqual({ creditoId: 9, bancoId: 3, numeroCuenta: '1002003004' });
-    expect(await screen.findAllByRole('row')).toHaveLength(13);
+    // Encabezado, 12 cuotas y la fila de totales.
+    expect(await screen.findAllByRole('row')).toHaveLength(14);
+    expect(screen.getByText('Totales')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Procesar desembolso' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 desembolsado correctamente');
+    expect(screen.getByRole('status')).toHaveTextContent('cuenta terminada en 3004');
   });
 
   it('un crédito ya desembolsado no muestra el formulario', async () => {
@@ -71,14 +76,14 @@ describe('DesembolsoPage', () => {
     expect(await screen.findByText('Desembolso realizado')).toBeInTheDocument();
     expect(screen.getByText('1002003004')).toBeInTheDocument();
     expect(screen.queryByLabelText('Banco destino')).not.toBeInTheDocument();
-    expect(await screen.findAllByRole('row')).toHaveLength(13);
+    expect(await screen.findAllByRole('row')).toHaveLength(14);
   });
 
   it('muestra el error 400 de numeroCuenta o bancoId junto al campo, no en un toast', async () => {
     servidor.use(
       http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),
       http.post('/api/v1/desembolsos', () => HttpResponse.json({
-        statusCode: 400, code: 'VALIDACION', message: 'Datos inválidos',
+        statusCode: 400, code: 'VALIDACION', message: 'Los datos enviados no son válidos',
         details: [{ field: 'numeroCuenta', code: 'CUENTA_INVALIDA', message: 'La cuenta no pertenece al banco' }],
       }, { status: 400 })));
     const { user } = renderizar(pantalla, { ruta: '/desembolsos/9', usuario: usuarios.cajero });
@@ -91,7 +96,7 @@ describe('DesembolsoPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('muestra el error de negocio y deja el formulario', async () => {
+  it('si otro cajero ya lo desembolsó (409), lo explica en un modal y ofrece volver a la bandeja', async () => {
     servidor.use(
       http.get('/api/v1/creditos/9', () => HttpResponse.json(creditoResponse())),
       http.post('/api/v1/desembolsos', () => HttpResponse.json(
@@ -104,6 +109,9 @@ describe('DesembolsoPage', () => {
     await user.type(screen.getByLabelText('Número de cuenta'), '1002003004');
     await user.click(screen.getByRole('button', { name: 'Procesar desembolso' }));
     await user.click(screen.getAllByRole('button', { name: 'Procesar desembolso' })[1]!);
-    expect(await screen.findByRole('alert')).toHaveTextContent('El crédito ya fue desembolsado');
+    const modal = await screen.findByRole('dialog', { name: 'El crédito ya no se puede desembolsar' });
+    expect(modal).toHaveTextContent('El crédito ya fue desembolsado');
+    await user.click(within(modal).getByRole('button', { name: 'Volver a la bandeja' }));
+    expect(await screen.findByText('bandeja de desembolsos')).toBeInTheDocument();
   });
 });

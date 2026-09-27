@@ -8,13 +8,26 @@ export interface FiltrosSolicitudes {
   estado?: EstadoSolicitud;
   cedula?: string;
   page: number;
+  pageSize?: number;
+  /** Por fecha de registro; la API usa `desc` si no se indica. */
+  orden?: 'asc' | 'desc';
 }
 
-export const useSolicitudes = (f: FiltrosSolicitudes) =>
+export const useSolicitudes = (f: FiltrosSolicitudes, habilitado = true) =>
   useQuery({
     queryKey: ['solicitudes', f],
     queryFn: () => api.get<Paginado<SolicitudResumen>>(`/solicitudes?${aQuery({ ...f })}`),
     placeholderData: keepPreviousData,
+    enabled: habilitado,
+  });
+
+/** Total de solicitudes en un estado (o de todas), para las tarjetas y el menú. Pide una sola fila. */
+export const useConteoSolicitudes = (estado?: EstadoSolicitud, habilitado = true) =>
+  useQuery({
+    queryKey: ['solicitudes', 'conteo', estado ?? 'TODAS'],
+    queryFn: () => api.get<Paginado<SolicitudResumen>>(`/solicitudes?${aQuery({ estado, page: 1, pageSize: 1 })}`),
+    select: (r) => r.total,
+    enabled: habilitado,
   });
 
 export const useSolicitud = (id: number) =>
