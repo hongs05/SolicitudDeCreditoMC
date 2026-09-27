@@ -1,11 +1,15 @@
+import { Link } from 'react-router-dom';
 import { useT } from '../i18n/I18nProvider';
-import { Card } from './Card';
+import { claseBoton } from './Button';
+import { PaginaError } from './PaginaError';
 
 export function Prohibido() {
   const { t } = useT();
   return (
-    <Card titulo={t('comun.prohibidoTitulo')}>
-      <p className="text-sm text-slate-700">{t('comun.prohibido')}</p>
-    </Card>
+    <PaginaError
+      codigo="403" icono="candado" tono="aviso"
+      titulo={t('comun.prohibidoTitulo')} texto={t('comun.prohibido')}
+      acciones={<Link to="/" className={claseBoton()}>{t('comun.irInicio')}</Link>}
+    />
   );
 }

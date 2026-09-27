@@ -7,6 +7,7 @@ import { DesembolsoPage } from '../features/desembolsos/DesembolsoPage';
 import { RequireRol } from '../features/auth/RequireRol';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RequireAuth } from '../features/auth/RequireAuth';
+import { DetallePage } from '../features/solicitudes/DetallePage';
 import { ListadoPage } from '../features/solicitudes/ListadoPage';
 import { NuevaSolicitudPage } from '../features/solicitudes/NuevaSolicitudPage';
 import { ConsultaPage } from '../features/plan-pagos/ConsultaPage';
@@ -21,6 +22,7 @@ export function RutasApp() {
         <Route element={<Layout />}>
           <Route index element={<InicioRedirect />} />
           <Route path="/solicitudes" element={<ListadoPage />} />
+          <Route path="/solicitudes/:solicitudId" element={<DetallePage />} />
           <Route path="/plan-pagos" element={<ConsultaPage />} />
           <Route element={<RequireRol roles={[Rol.OFICIAL]} />}>
             <Route path="/solicitudes/nueva" element={<NuevaSolicitudPage />} />

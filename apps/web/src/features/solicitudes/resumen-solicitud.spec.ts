@@ -1,6 +1,7 @@
+import { Periodicidad } from '@credito/domain';
 import { describe, expect, it } from 'vitest';
 import { VALORES_INICIALES } from './esquema';
-import { resumirSolicitud } from './resumen-solicitud';
+import { relacionCuotaIngreso, resumirSolicitud } from './resumen-solicitud';
 
 const HOY = '2026-09-24';
 const caso = (cambios = {}) => ({
@@ -19,6 +20,7 @@ describe('resumirSolicitud', () => {
       edad: 36,
       edadExcedida: false,
       plan: { cuota: 888.49, totalPagar: 10661.86, totalIntereses: 661.86 },
+      relacion: null,
     });
   });
 
@@ -37,5 +39,13 @@ describe('resumirSolicitud', () => {
   it('sin fecha válida no hay edad', () => {
     expect(resumirSolicitud(caso({ fechaNacimiento: '' }), HOY).edad).toBeNull();
     expect(resumirSolicitud(caso({ fechaNacimiento: '2999-01-01' }), HOY).edad).toBeNull();
+  });
+
+  it('calcula la relación cuota / ingreso en base mensual', () => {
+    expect(resumirSolicitud(caso({ ingresoMensual: '2000' }), HOY).relacion).toBe(44);
+    expect(resumirSolicitud(caso({ ingresoMensual: 'abc' }), HOY).relacion).toBeNull();
+    expect(relacionCuotaIngreso(100, Periodicidad.QUINCENAL, 1000)).toBe(20);
+    expect(relacionCuotaIngreso(1200, Periodicidad.ANUAL, 1000)).toBe(10);
+    expect(relacionCuotaIngreso(100, Periodicidad.MENSUAL, 0)).toBeNull();
   });
 });

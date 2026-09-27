@@ -1,5 +1,5 @@
 import { EstadoSolicitud } from '@credito/domain';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -80,5 +80,41 @@ describe('DictamenPage', () => {
     await user.click(screen.getByRole('button', { name: 'Rechazar Crédito' }));
     await user.click(screen.getAllByRole('button', { name: 'Rechazar Crédito' })[1]!);
     expect(await screen.findByRole('alert')).toHaveTextContent('No se puede rechazar una solicitud en estado aprobada');
+  });
+
+  it('la confirmación cita las observaciones y el monto', async () => {
+    conSolicitud();
+    const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
+    await user.type(await screen.findByLabelText('Observaciones'), 'Capacidad verificada');
+    expect(screen.getByText('20 / 1000')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Aprobar Crédito' }));
+    const dialogo = screen.getByRole('dialog');
+    expect(dialogo).toHaveTextContent('Capacidad verificada');
+    expect(dialogo).toHaveTextContent(/C\$ 10[,.]000[.,]00/);
+    expect(dialogo).toHaveTextContent('24 cuotas quincenales');
+  });
+
+  it('una dictaminada muestra quién decidió y sus observaciones', async () => {
+    conSolicitud({
+      estado: EstadoSolicitud.RECHAZADA, observaciones: 'Ingresos insuficientes',
+      dictaminadaPor: { id: 2, username: 'analista', rol: 'ANALISTA' }, dictaminadaEn: new Date().toISOString(),
+    });
+    renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
+    expect(await screen.findByText('Ingresos insuficientes')).toBeInTheDocument();
+    expect(screen.getByText(/Dictaminada por analista/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver expediente' })).toHaveAttribute('href', '/solicitudes/5');
+  });
+
+  it('un error de red ofrece reintentar, que vuelve a pedir confirmación', async () => {
+    conSolicitud();
+    servidor.use(http.post('/api/v1/solicitudes/5/aprobar', () => HttpResponse.error()));
+    const { user } = renderizar(pantalla, { ruta: '/comite/5', usuario: usuarios.analista });
+    await user.type(await screen.findByLabelText('Observaciones'), 'Ok');
+    await user.click(screen.getByRole('button', { name: 'Aprobar Crédito' }));
+    await user.click(screen.getAllByRole('button', { name: 'Aprobar Crédito' })[1]!);
+    const aviso = await screen.findByRole('alert');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(within(aviso).getByRole('button', { name: 'Reintentar' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 });

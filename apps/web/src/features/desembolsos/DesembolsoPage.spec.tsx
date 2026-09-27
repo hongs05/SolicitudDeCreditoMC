@@ -53,13 +53,17 @@ describe('DesembolsoPage', () => {
     await user.clear(screen.getByLabelText('Número de cuenta'));
     await user.type(screen.getByLabelText('Número de cuenta'), '1002003004');
     await user.click(screen.getByRole('button', { name: 'Procesar desembolso' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('BAC Credomatic');
+    expect(screen.getByRole('dialog')).toHaveTextContent('BAC Credomatic · cuenta 1002003004');
     await user.click(screen.getAllByRole('button', { name: 'Procesar desembolso' })[1]!);
 
     expect(await screen.findByText('Desembolso realizado')).toBeInTheDocument();
     expect(cuerpo).toEqual({ creditoId: 9, bancoId: 3, numeroCuenta: '1002003004' });
-    expect(await screen.findAllByRole('row')).toHaveLength(13);
+    // Encabezado, 12 cuotas y la fila de totales.
+    expect(await screen.findAllByRole('row')).toHaveLength(14);
+    expect(screen.getByText('Totales')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Procesar desembolso' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Crédito CR-000001 desembolsado');
+    expect(screen.getByRole('status')).toHaveTextContent('cuenta terminada en 3004');
   });
 
   it('un crédito ya desembolsado no muestra el formulario', async () => {
@@ -71,7 +75,7 @@ describe('DesembolsoPage', () => {
     expect(await screen.findByText('Desembolso realizado')).toBeInTheDocument();
     expect(screen.getByText('1002003004')).toBeInTheDocument();
     expect(screen.queryByLabelText('Banco destino')).not.toBeInTheDocument();
-    expect(await screen.findAllByRole('row')).toHaveLength(13);
+    expect(await screen.findAllByRole('row')).toHaveLength(14);
   });
 
   it('muestra el error 400 de numeroCuenta o bancoId junto al campo, no en un toast', async () => {
